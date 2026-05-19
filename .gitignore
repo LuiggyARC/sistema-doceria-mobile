@@ -1,0 +1,11 @@
+@"
+*.hprof
+.gradle/
+.idea/
+build/
+app/build/
+local.properties
+*.apk
+*.aab
+*.log
+"@ > .gitignore
