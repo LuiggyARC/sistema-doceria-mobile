@@ -6,6 +6,7 @@ import com.doceriadaduda.data.local.local.dao.DespesaPorCategoria
 import com.doceriadaduda.data.local.local.dao.FechamentoResumo
 import com.doceriadaduda.data.local.local.dao.FaturamentoQtdMes
 import com.doceriadaduda.data.local.local.dao.TopVendidoMes
+import com.doceriadaduda.data.local.local.dao.VendasPorCategoria
 import com.doceriadaduda.data.local.local.dao.VendasPorFormaPagamento
 import com.doceriadaduda.data.repository.DespesaRepository
 import com.doceriadaduda.data.repository.FechamentoRepository
@@ -26,6 +27,7 @@ import java.time.format.DateTimeFormatter
 class RelatoriosViewModel(private val vendaRepository: VendaRepository,
                           private val despesaRepository: DespesaRepository,
                           private val fechamentoRepository: FechamentoRepository,
+                          private val produtoRepository: com.doceriadaduda.data.repository.ProdutoRepository,
                           private val sharedViewModel: SharedViewModel) : ViewModel() {
 
     private val _vendasHoje = MutableStateFlow(0.0)
@@ -42,9 +44,6 @@ class RelatoriosViewModel(private val vendaRepository: VendaRepository,
 
     private val _saldoDia = MutableStateFlow(0.0)
     val saldoDia: StateFlow<Double> = _saldoDia.asStateFlow()
-
-    private val _fechadoHoje = MutableStateFlow(false)
-    val fechadoHoje: StateFlow<Boolean> = _fechadoHoje.asStateFlow()
 
     private val _vendas7Dias = MutableStateFlow<List<Triple<String, String, Double>>>(emptyList())
     val vendas7Dias: StateFlow<List<Triple<String, String, Double>>> = _vendas7Dias.asStateFlow()
@@ -94,6 +93,15 @@ class RelatoriosViewModel(private val vendaRepository: VendaRepository,
     private val _fechamentosRecentes = MutableStateFlow<List<FechamentoResumo>>(emptyList())
     val fechamentosRecentes: StateFlow<List<FechamentoResumo>> = _fechamentosRecentes.asStateFlow()
 
+    private val _estoqueResumo = MutableStateFlow<List<com.doceriadaduda.model.Produto>>(emptyList())
+    val estoqueResumo: StateFlow<List<com.doceriadaduda.model.Produto>> = _estoqueResumo.asStateFlow()
+
+    private val _vendasPorCategoria = MutableStateFlow<List<VendasPorCategoria>>(emptyList())
+    val vendasPorCategoria: StateFlow<List<VendasPorCategoria>> = _vendasPorCategoria.asStateFlow()
+
+    private val _mesSelecionado = MutableStateFlow(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM")))
+    val mesSelecionado: StateFlow<String> = _mesSelecionado.asStateFlow()
+
     private val _mensagemStatus = MutableStateFlow("")
     val mensagemStatus: StateFlow<String> = _mensagemStatus.asStateFlow()
 
@@ -104,19 +112,23 @@ class RelatoriosViewModel(private val vendaRepository: VendaRepository,
         loadRelatoriosData()
     }
 
+    fun selecionarMes(mes: String) {
+        _mesSelecionado.value = mes
+        loadRelatoriosData()
+    }
+
     fun loadRelatoriosData() {
         viewModelScope.launch {
             val today = LocalDate.now().format(DateTimeFormatter.ISO_DATE)
-            val month = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
-            val firstDayOfMonth = LocalDate.now().withDayOfMonth(1)
-            val previousMonth = firstDayOfMonth.minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"))
+            val month = _mesSelecionado.value
+            val firstDayOfSelectedMonth = LocalDate.parse("$month-01")
+            val previousMonth = firstDayOfSelectedMonth.minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"))
 
             val flowList = listOf(
                 vendaRepository.getVendasTotalHoje(today),
                 despesaRepository.getDespesasTotalHoje(today),
                 vendaRepository.getQtdVendasHoje(today),
                 vendaRepository.getTaxaCartaoHoje(today),
-                flow { emit(fechamentoRepository.getFechamentoByData(today)) },
                 getVendas7DiasFlow(),
                 vendaRepository.getVendasPorFormaPagamentoMes(month),
                 vendaRepository.getTopVendidosMes(month),
@@ -126,7 +138,9 @@ class RelatoriosViewModel(private val vendaRepository: VendaRepository,
                 vendaRepository.getTaxaCartaoMes(month),
                 vendaRepository.getFaturamentoQtdMesAnterior(previousMonth),
                 despesaRepository.getDespesasTotalMesAnterior(previousMonth),
-                fechamentoRepository.getFechamentosRecentes()
+                fechamentoRepository.getFechamentosRecentes(),
+                vendaRepository.getVendasPorCategoriaMes(month),
+                produtoRepository.getProdutosAtivos()
             )
 
             combine(flowList) { array ->
@@ -134,24 +148,24 @@ class RelatoriosViewModel(private val vendaRepository: VendaRepository,
                 val dHoje = array[1] as Double? ?: 0.0
                 val qtdVendasHoje = array[2] as Int
                 val taxaCartaoHoje = array[3] as Double? ?: 0.0
-                val fechamento = array[4] as Fechamento?
-                val vendas7Dias = array[5] as List<Triple<String, String, Double>>
-                val pagamentosMes = array[6] as List<VendasPorFormaPagamento>
-                val topMes = array[7] as List<TopVendidoMes>
-                val despCategorias = array[8] as List<DespesaPorCategoria>
-                val fatQtdMes = array[9] as FaturamentoQtdMes
-                val despMes = array[10] as Double? ?: 0.0
-                val taxaMes = array[11] as Double? ?: 0.0
-                val fatQtdMesAnt = array[12] as FaturamentoQtdMes
-                val despMesAnt = array[13] as Double? ?: 0.0
-                val fechamentosRecentes = array[14] as List<FechamentoResumo>
+                val vendas7Dias = array[4] as List<Triple<String, String, Double>>
+                val pagamentosMes = array[5] as List<VendasPorFormaPagamento>
+                val topMes = array[6] as List<TopVendidoMes>
+                val despCategorias = array[7] as List<DespesaPorCategoria>
+                val fatQtdMes = array[8] as FaturamentoQtdMes
+                val despMes = array[9] as Double? ?: 0.0
+                val taxaMes = array[10] as Double? ?: 0.0
+                val fatQtdMesAnt = array[11] as FaturamentoQtdMes
+                val despMesAnt = array[12] as Double? ?: 0.0
+                val fechamentosRecentes = array[13] as List<FechamentoResumo>
+                val vendasPorCat = array[14] as List<VendasPorCategoria>
+                val produtos = array[15] as List<com.doceriadaduda.model.Produto>
 
                 _vendasHoje.value = vHoje
                 _despesasHoje.value = dHoje
                 _qtdVendasHoje.value = qtdVendasHoje
                 _taxaCartaoHoje.value = taxaCartaoHoje
                 _saldoDia.value = vHoje - dHoje
-                _fechadoHoje.value = fechamento != null
                 _vendas7Dias.value = vendas7Dias
                 _pagamentosMes.value = pagamentosMes
                 _topMes.value = topMes
@@ -172,6 +186,8 @@ class RelatoriosViewModel(private val vendaRepository: VendaRepository,
                 _ticketMedioAnterior.value = if (fatQtdMesAnt.quantidade > 0) fatQtdMesAnt.faturamento / fatQtdMesAnt.quantidade else 0.0
 
                 _fechamentosRecentes.value = fechamentosRecentes
+                _vendasPorCategoria.value = vendasPorCat
+                _estoqueResumo.value = produtos
             }.collect { }
         }
     }
@@ -188,40 +204,5 @@ class RelatoriosViewModel(private val vendaRepository: VendaRepository,
             }
         }
         return combine(flows) { it.toList().reversed() }
-    }
-
-    fun fecharCaixa() {
-        viewModelScope.launch {
-            val today = LocalDate.now().format(DateTimeFormatter.ISO_DATE)
-            val vHoje = vendasHoje.value
-            val dHoje = despesasHoje.value
-            val qtdVendas = qtdVendasHoje.value
-            val saldo = saldoDia.value
-
-            if (fechamentoRepository.getFechamentoByData(today) != null) {
-                _mensagemStatus.value = "Caixa ja foi fechado hoje!"
-                _mensagemStatusColor.value = 0xFFE53935 // RED
-                return@launch
-            }
-
-            try {
-                val fechamento = Fechamento(
-                    data = today,
-                    qtdVendas = qtdVendas,
-                    faturamento = vHoje,
-                    despesas = dHoje,
-                    saldo = saldo,
-                    horaFechamento = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-                    observacao = null
-                )
-                fechamentoRepository.insert(fechamento)
-                _mensagemStatus.value = "Caixa fechado com sucesso para hoje!"
-                _mensagemStatusColor.value = 0xFF4CAF50 // GREEN
-                loadRelatoriosData() // Recarregar dados após fechamento
-            } catch (e: Exception) {
-                _mensagemStatus.value = "Erro ao fechar caixa: ${e.message}"
-                _mensagemStatusColor.value = 0xFFE53935 // RED
-            }
-        }
     }
 }

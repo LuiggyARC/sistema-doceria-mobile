@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,8 +17,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Payment
@@ -29,12 +33,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,9 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.doceriadaduda.di.AppModule
-import com.doceriadaduda.ui.theme.Background
 import com.doceriadaduda.ui.theme.Blue
-import com.doceriadaduda.ui.theme.CardBackground
 import com.doceriadaduda.ui.theme.Green
 import com.doceriadaduda.ui.theme.Orange
 import com.doceriadaduda.ui.theme.Primary
@@ -56,18 +61,21 @@ import com.doceriadaduda.ui.theme.TextColor
 import com.doceriadaduda.viewmodel.RelatoriosViewModel
 import com.doceriadaduda.viewmodel.SharedViewModel
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relatoriosViewModel,
                      sharedViewModel: SharedViewModel = AppModule.sharedViewModel) {
 
+    val mesSelecionadoStr by relatoriosViewModel.mesSelecionado.collectAsState()
+    val mesSelecionado = remember(mesSelecionadoStr) { YearMonth.parse(mesSelecionadoStr) }
+
     val vendasHoje by relatoriosViewModel.vendasHoje.collectAsState()
     val despesasHoje by relatoriosViewModel.despesasHoje.collectAsState()
     val qtdVendasHoje by relatoriosViewModel.qtdVendasHoje.collectAsState()
     val taxaCartaoHoje by relatoriosViewModel.taxaCartaoHoje.collectAsState()
     val saldoDia by relatoriosViewModel.saldoDia.collectAsState()
-    val fechadoHoje by relatoriosViewModel.fechadoHoje.collectAsState()
 
     val vendas7Dias by relatoriosViewModel.vendas7Dias.collectAsState()
     val pagamentosMes by relatoriosViewModel.pagamentosMes.collectAsState()
@@ -88,30 +96,95 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
     val ticketMedio by relatoriosViewModel.ticketMedio.collectAsState()
     val ticketMedioAnterior by relatoriosViewModel.ticketMedioAnterior.collectAsState()
 
+    val vendasPorCategoria by relatoriosViewModel.vendasPorCategoria.collectAsState()
+
+    val estoqueResumo by relatoriosViewModel.estoqueResumo.collectAsState()
+
     val fechamentosRecentes by relatoriosViewModel.fechamentosRecentes.collectAsState()
 
-    val mensagemStatus by relatoriosViewModel.mensagemStatus.collectAsState()
-    val mensagemStatusColor by relatoriosViewModel.mensagemStatusColor.collectAsState()
-
     val todayFmt = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-    val monthFmt = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/yyyy"))
+    val monthDisplayFmt = mesSelecionado.format(DateTimeFormatter.ofPattern("MMMM yyyy"))
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
+            .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(15.dp)
     ) {
         item {
-            Text(
-                text = "Relatorios e Fechamento de Caixa",
-                fontSize = 24.sp,
-                color = Secondary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Divider(color = Secondary, thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Relatórios",
+                    fontSize = 24.sp,
+                    color = Secondary,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Button(
+                    onClick = { 
+                        com.doceriadaduda.util.PdfReportExporter.exportMensal(
+                            context = com.doceriadaduda.di.AppModule.applicationContext, // Access app context
+                            mes = mesSelecionado.format(DateTimeFormatter.ofPattern("MM/yyyy")),
+                            faturamento = faturamentoMes,
+                            despesas = despesasMes,
+                            saldo = saldoMes,
+                            ticketMedio = ticketMedio,
+                            vendasQtd = qtdVendasMes
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Secondary),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("PDF", fontSize = 12.sp)
+                }
+            }
+            HorizontalDivider(color = Secondary, thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
+        }
+
+        // Seletor de Mês
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, Primary.copy(alpha = 0.5f))
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { 
+                        val prev = mesSelecionado.minusMonths(1)
+                        relatoriosViewModel.selecionarMes(prev.format(DateTimeFormatter.ofPattern("yyyy-MM")))
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Mês Anterior", tint = Secondary)
+                    }
+                    
+                    Text(
+                        text = monthDisplayFmt.replaceFirstChar { it.uppercase() },
+                        fontWeight = FontWeight.Bold,
+                        color = Secondary,
+                        fontSize = 16.sp
+                    )
+                    
+                    IconButton(onClick = { 
+                        val next = mesSelecionado.plusMonths(1)
+                        relatoriosViewModel.selecionarMes(next.format(DateTimeFormatter.ofPattern("yyyy-MM")))
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Próximo Mês", tint = Secondary)
+                    }
+                }
+            }
         }
 
         // Resumo do Dia
@@ -128,38 +201,13 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
                         Spacer(modifier = Modifier.size(6.dp))
                         Text("Resumo do Dia ($todayFmt)", fontSize = 16.sp, color = Secondary, fontWeight = FontWeight.Bold)
                     }
-                    Divider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
                     ResumoItem("Vendas realizadas:", "$qtdVendasHoje", TextColor)
                     ResumoItem("Faturamento bruto:", sharedViewModel.fmtReal(vendasHoje), Green)
                     ResumoItem("Despesas:", sharedViewModel.fmtReal(despesasHoje), Red)
                     ResumoItem("Taxa Cartao:", sharedViewModel.fmtReal(taxaCartaoHoje), Purple)
                     ResumoItem("Saldo do dia:", sharedViewModel.fmtReal(saldoDia), if (saldoDia >= 0) Green else Red)
                 }
-            }
-        }
-
-        // Fechamento de Caixa
-        item {
-            Spacer(modifier = Modifier.height(10.dp))
-            Button(
-                onClick = { relatoriosViewModel.fecharCaixa() },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = if (fechadoHoje) Red else Green),
-                shape = RoundedCornerShape(8.dp),
-                enabled = !fechadoHoje
-            ) {
-                Icon(if (fechadoHoje) Icons.Default.Lock else Icons.Default.LockOpen, contentDescription = "Fechar Caixa", tint = Color.White)
-                Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-                Text(if (fechadoHoje) "Caixa Fechado Hoje" else "Fechar Caixa do Dia", color = Color.White, fontSize = 16.sp)
-            }
-            if (mensagemStatus.isNotBlank()) {
-                Text(
-                    text = mensagemStatus,
-                    color = Color(mensagemStatusColor),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                )
             }
         }
 
@@ -178,7 +226,7 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
                         Spacer(modifier = Modifier.size(6.dp))
                         Text("Vendas - Ultimos 7 dias", fontSize = 16.sp, color = Secondary, fontWeight = FontWeight.Bold)
                     }
-                    Divider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
 
                     val maxVendaDia = vendas7Dias.maxOfOrNull { it.third } ?: 1.0
                     val coresDias = listOf(Primary, Secondary, Green, Orange, Purple, Blue, Red)
@@ -202,7 +250,7 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
             }
         }
 
-        // Gráfico 2: Vendas por forma de pagamento (mês)
+        // Gráfico 2: Vendas por forma de pagamento (mês selecionado)
         item {
             Spacer(modifier = Modifier.height(10.dp))
             Card(
@@ -217,7 +265,7 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
                         Spacer(modifier = Modifier.size(6.dp))
                         Text("Formas de Pagamento (Mes)", fontSize = 16.sp, color = Secondary, fontWeight = FontWeight.Bold)
                     }
-                    Divider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
 
                     val totalPagto = pagamentosMes.sumOf { it.total }
                     val coresPagto = mapOf(
@@ -228,7 +276,7 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
                     )
 
                     if (pagamentosMes.isEmpty()) {
-                        Text("Nenhuma venda no mes.", fontSize = 12.sp, color = TextColor, fontStyle = FontStyle.Italic)
+                        Text("Nenhuma venda no período.", fontSize = 12.sp, color = TextColor, fontStyle = FontStyle.Italic)
                     } else {
                         pagamentosMes.forEach { item ->
                             val pct = if (totalPagto > 0) (item.total / totalPagto * 100) else 0.0
@@ -244,7 +292,7 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
             }
         }
 
-        // Gráfico 3: Top 5 produtos mais vendidos do mês
+        // Gráfico 3: Top 5 produtos mais vendidos do mês selecionado
         item {
             Spacer(modifier = Modifier.height(10.dp))
             Card(
@@ -259,13 +307,13 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
                         Spacer(modifier = Modifier.size(6.dp))
                         Text("Top 5 Produtos Vendidos (Mes)", fontSize = 16.sp, color = Secondary, fontWeight = FontWeight.Bold)
                     }
-                    Divider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
 
                     val maxReceitaTop = topMes.maxOfOrNull { it.receita } ?: 1.0
                     val coresTop = listOf(Secondary, Primary, Green, Blue, Orange)
 
                     if (topMes.isEmpty()) {
-                        Text("Nenhuma venda no mes.", fontSize = 12.sp, color = TextColor, fontStyle = FontStyle.Italic)
+                        Text("Nenhuma venda no período.", fontSize = 12.sp, color = TextColor, fontStyle = FontStyle.Italic)
                     } else {
                         topMes.forEachIndexed { index, item ->
                             val corBarra = coresTop[index % coresTop.size]
@@ -282,7 +330,45 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
             }
         }
 
-        // Gráfico 4: Despesas por categoria (mês)
+        // Gráfico 3.5: Vendas por Categoria (mês selecionado)
+        item {
+            Spacer(modifier = Modifier.height(10.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(15.dp),
+                border = BorderStroke(1.dp, Primary)
+            ) {
+                Column(modifier = Modifier.padding(15.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Summarize, contentDescription = "Vendas por Categoria", tint = Secondary, modifier = Modifier.size(22.dp))
+                        Spacer(modifier = Modifier.size(6.dp))
+                        Text("Vendas por Categoria (Mes)", fontSize = 16.sp, color = Secondary, fontWeight = FontWeight.Bold)
+                    }
+                    HorizontalDivider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+
+                    val maxVendaCat = vendasPorCategoria.maxOfOrNull { it.total } ?: 1.0
+                    val coresCat = listOf(Orange, Purple, Blue, Green, Primary)
+
+                    if (vendasPorCategoria.isEmpty()) {
+                        Text("Nenhuma venda no período.", fontSize = 12.sp, color = TextColor, fontStyle = FontStyle.Italic)
+                    } else {
+                        vendasPorCategoria.forEachIndexed { index, item ->
+                            val corBarra = coresCat[index % coresCat.size]
+                            HorizontalBarChartItem(
+                                label = item.categoria ?: "Sem Categoria",
+                                value = item.total,
+                                maxValue = maxVendaCat,
+                                color = corBarra,
+                                sharedViewModel = sharedViewModel
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Gráfico 4: Despesas por categoria (mês selecionado)
         item {
             Spacer(modifier = Modifier.height(10.dp))
             Card(
@@ -297,13 +383,13 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
                         Spacer(modifier = Modifier.size(6.dp))
                         Text("Despesas por Categoria (Mes)", fontSize = 16.sp, color = Secondary, fontWeight = FontWeight.Bold)
                     }
-                    Divider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
 
                     val maxDespesaCat = despesasCategorias.maxOfOrNull { it.valor } ?: 1.0
                     val coresDesp = listOf(Red, Orange, Purple, Blue, Green)
 
                     if (despesasCategorias.isEmpty()) {
-                        Text("Nenhuma despesa no mes.", fontSize = 12.sp, color = TextColor, fontStyle = FontStyle.Italic)
+                        Text("Nenhuma despesa no período.", fontSize = 12.sp, color = TextColor, fontStyle = FontStyle.Italic)
                     } else {
                         despesasCategorias.forEachIndexed { index, item ->
                             val corBarra = coresDesp[index % coresDesp.size]
@@ -320,7 +406,44 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
             }
         }
 
-        // Resumo do Mês Atual
+        // Seção: Resumo de Estoque (Alerta de Reposição)
+        item {
+            Spacer(modifier = Modifier.height(10.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(15.dp),
+                border = BorderStroke(1.dp, Primary)
+            ) {
+                Column(modifier = Modifier.padding(15.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.BarChart, contentDescription = "Estoque", tint = Secondary, modifier = Modifier.size(22.dp))
+                        Spacer(modifier = Modifier.size(6.dp))
+                        Text("Alertas de Estoque", fontSize = 16.sp, color = Secondary, fontWeight = FontWeight.Bold)
+                    }
+                    HorizontalDivider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+
+                    val produtosBaixos = estoqueResumo.filter { it.quantidadeEstoque <= it.estoqueMinimo }
+                    
+                    if (produtosBaixos.isEmpty()) {
+                        Text("Todos os produtos com estoque em dia.", fontSize = 12.sp, color = Green, fontWeight = FontWeight.Bold)
+                    } else {
+                        produtosBaixos.forEach { prod ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(prod.nome, fontSize = 13.sp, color = TextColor)
+                                Text("${prod.quantidadeEstoque} un.", fontSize = 13.sp, color = Red, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        Text("(Reponha estes itens em breve)", fontSize = 10.sp, color = TextColor, fontStyle = FontStyle.Italic)
+                    }
+                }
+            }
+        }
+
+        // Resumo do Mês Selecionado
         item {
             Spacer(modifier = Modifier.height(10.dp))
             Card(
@@ -333,14 +456,14 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Summarize, contentDescription = "Resumo Mes", tint = Secondary, modifier = Modifier.size(22.dp))
                         Spacer(modifier = Modifier.size(6.dp))
-                        Text("Resumo do Mes ($monthFmt)", fontSize = 16.sp, color = Secondary, fontWeight = FontWeight.Bold)
+                        Text("Resumo do Mes (${mesSelecionado.format(DateTimeFormatter.ofPattern("MM/yyyy"))})", fontSize = 16.sp, color = Secondary, fontWeight = FontWeight.Bold)
                     }
-                    Divider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
                     ResumoItem("Vendas realizadas:", "$qtdVendasMes", TextColor)
                     ResumoItem("Faturamento bruto:", sharedViewModel.fmtReal(faturamentoMes), Green)
                     ResumoItem("Despesas:", sharedViewModel.fmtReal(despesasMes), Red)
                     ResumoItem("Taxa Cartao:", sharedViewModel.fmtReal(taxaCartaoMes), Purple)
-                    ResumoItem("Saldo do mes:", sharedViewModel.fmtReal(saldoMes), if (saldoMes >= 0) Green else Red)
+                    ResumoItem("Lucro (Saldo):", sharedViewModel.fmtReal(saldoMes), if (saldoMes >= 0) Green else Red)
                     ResumoItem("Ticket Medio:", sharedViewModel.fmtReal(ticketMedio), TextColor)
                 }
             }
@@ -361,7 +484,7 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
                         Spacer(modifier = Modifier.size(6.dp))
                         Text("Comparativo com Mes Anterior", fontSize = 16.sp, color = Secondary, fontWeight = FontWeight.Bold)
                     }
-                    Divider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(color = Primary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
                     ComparativoItem("Faturamento:", faturamentoMes, faturamentoMesAnterior, sharedViewModel)
                     ComparativoItem("Despesas:", despesasMes, despesasMesAnterior, sharedViewModel)
                     ComparativoItem("Saldo:", saldoMes, saldoMesAnterior, sharedViewModel)
@@ -380,7 +503,7 @@ fun RelatoriosScreen(relatoriosViewModel: RelatoriosViewModel = AppModule.relato
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.fillMaxWidth()
             )
-            Divider(color = Secondary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+            HorizontalDivider(color = Secondary, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
         }
 
         if (fechamentosRecentes.isEmpty()) {
@@ -472,6 +595,19 @@ fun ComparativoItem(label: String, atual: Double, anterior: Double, sharedViewMo
         Spacer(modifier = Modifier.width(4.dp))
         Icon(seta, contentDescription = "Tendencia", tint = corVar, modifier = Modifier.size(16.dp))
         Text("$sinal${String.format("%.0f", variacao)}%", fontSize = 11.sp, color = corVar, fontWeight = FontWeight.Bold)
+    }
+    Spacer(modifier = Modifier.height(2.dp))
+}
+
+@Composable
+private fun ResumoItem(label: String, value: String, valueColor: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, fontSize = 13.sp, color = TextColor)
+        Text(value, fontSize = 14.sp, color = valueColor, fontWeight = FontWeight.Bold)
     }
     Spacer(modifier = Modifier.height(2.dp))
 }

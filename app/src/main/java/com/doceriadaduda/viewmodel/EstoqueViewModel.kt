@@ -53,10 +53,9 @@ class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
                     produtoRepository.update(produtoAtualizado)
                     _mensagemStatus.value = "Estoque de \'${nomeProduto}\' reposto com +${qtdRepor} unidades!"
                     _mensagemStatusColor.value = 0xFF4CAF50 // GREEN
-                    loadProdutosAtivos() // Recarregar a lista para atualizar a UI
                 }
             } catch (e: NumberFormatException) {
-                _mensagemStatus.value = "Quantidade invalida!"
+                _mensagemStatus.value = "Quantidade inválida!"
                 _mensagemStatusColor.value = 0xFFE53935 // RED
             } catch (e: Exception) {
                 _mensagemStatus.value = "Erro: ${e.message}"
@@ -65,24 +64,70 @@ class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
         }
     }
 
-    fun salvarEdicaoProduto(produtoId: Int, nomeAtual: String, novoNome: String, novoPrecoStr: String, novaCategoria: String?) {
-        if (novoNome.isBlank() || novoPrecoStr.isBlank()) {
-            _mensagemStatus.value = "Nome e preco sao obrigatorios!"
+    fun registrarDesperdicio(produtoId: Int, nomeProduto: String, quantidade: Int) {
+        viewModelScope.launch {
+            try {
+                val produto = produtoRepository.getProdutoById(produtoId)
+                if (produto != null) {
+                    if (produto.quantidadeEstoque < quantidade) {
+                        _mensagemStatus.value = "Estoque insuficiente para registrar perda!"
+                        _mensagemStatusColor.value = 0xFFE53935 // RED
+                        return@launch
+                    }
+                    val produtoAtualizado = produto.copy(quantidadeEstoque = produto.quantidadeEstoque - quantidade)
+                    produtoRepository.update(produtoAtualizado)
+                    
+                    // TODO: Futuramente, registrar isso em uma tabela de Auditoria/Perdas
+                    _mensagemStatus.value = "Desperdício de $quantidade un. de \'$nomeProduto\' registrado."
+                    _mensagemStatusColor.value = 0xFFFFA000 // ORANGE
+                }
+            } catch (e: Exception) {
+                _mensagemStatus.value = "Erro ao registrar desperdício: ${e.message}"
+                _mensagemStatusColor.value = 0xFFE53935 // RED
+            }
+        }
+    }
+
+    fun adicionarProduto(nome: String, precoStr: String, categoria: String, estoqueMinStr: String) {
+        if (nome.isBlank() || precoStr.isBlank()) {
+            _mensagemStatus.value = "Preencha os campos obrigatórios!"
             _mensagemStatusColor.value = 0xFFE53935 // RED
             return
         }
         viewModelScope.launch {
             try {
-                val novoPreco = sharedViewModel.parseValor(novoPrecoStr)
-                if (novoPreco <= 0) {
-                    _mensagemStatus.value = "Preco deve ser maior que zero!"
-                    _mensagemStatusColor.value = 0xFFE53935 // RED
-                    return@launch
-                }
+                val preco = precoStr.toDoubleOrNull() ?: 0.0
+                val estoqueMin = estoqueMinStr.toIntOrNull() ?: 5
+                
+                val novoProduto = Produto(
+                    nome = nome.trim(),
+                    categoria = if (categoria.isBlank()) "Geral" else categoria.trim(),
+                    precoVenda = preco,
+                    quantidadeEstoque = 0,
+                    estoqueMinimo = estoqueMin,
+                    ativo = true
+                )
+                produtoRepository.insert(novoProduto)
+                _mensagemStatus.value = "Produto \'$nome\' cadastrado com sucesso!"
+                _mensagemStatusColor.value = 0xFF4CAF50 // GREEN
+            } catch (e: Exception) {
+                _mensagemStatus.value = "Erro ao salvar: ${e.message}"
+                _mensagemStatusColor.value = 0xFFE53935 // RED
+            }
+        }
+    }
 
-                val produtoExistenteComNome = produtoRepository.getProdutoByNome(novoNome)
-                if (produtoExistenteComNome != null && produtoExistenteComNome.id != produtoId) {
-                    _mensagemStatus.value = "Ja existe um produto com esse nome!"
+    fun salvarEdicaoProduto(produtoId: Int, nomeAtual: String, novoNome: String, novoPrecoStr: String, novaCategoria: String?) {
+        if (novoNome.isBlank() || novoPrecoStr.isBlank()) {
+            _mensagemStatus.value = "Nome e preço são obrigatórios!"
+            _mensagemStatusColor.value = 0xFFE53935 // RED
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val novoPreco = novoPrecoStr.toDoubleOrNull() ?: 0.0
+                if (novoPreco <= 0) {
+                    _mensagemStatus.value = "Preço deve ser maior que zero!"
                     _mensagemStatusColor.value = 0xFFE53935 // RED
                     return@launch
                 }
@@ -97,24 +142,9 @@ class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
                     produtoRepository.update(produtoAtualizado)
                     _mensagemStatus.value = "Produto atualizado com sucesso!"
                     _mensagemStatusColor.value = 0xFF4CAF50 // GREEN
-                    loadProdutosAtivos()
                 }
             } catch (e: Exception) {
                 _mensagemStatus.value = "Erro: ${e.message}"
-                _mensagemStatusColor.value = 0xFFE53935 // RED
-            }
-        }
-    }
-
-    fun addProduto(produto: Produto) {
-        viewModelScope.launch {
-            try {
-                produtoRepository.insert(produto)
-                _mensagemStatus.value = "Produto \'${produto.nome}\' adicionado com sucesso!"
-                _mensagemStatusColor.value = 0xFF4CAF50 // GREEN
-                loadProdutosAtivos()
-            } catch (e: Exception) {
-                _mensagemStatus.value = "Erro ao adicionar produto: ${e.message}"
                 _mensagemStatusColor.value = 0xFFE53935 // RED
             }
         }
@@ -126,7 +156,6 @@ class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
                 produtoRepository.desativarProduto(produtoId)
                 _mensagemStatus.value = "Produto \'${nomeProduto}\' removido!"
                 _mensagemStatusColor.value = 0xFF4CAF50 // GREEN
-                loadProdutosAtivos()
             } catch (e: Exception) {
                 _mensagemStatus.value = "Erro ao excluir: ${e.message}"
                 _mensagemStatusColor.value = 0xFFE53935 // RED

@@ -2,6 +2,9 @@ package com.doceriadaduda.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.doceriadaduda.data.payment.PaymentCallback
+import com.doceriadaduda.data.payment.PaymentManager
+import com.doceriadaduda.data.payment.PaymentProvider
 import com.doceriadaduda.data.remote.ApiService
 import com.doceriadaduda.data.remote.PedidoApi
 import com.doceriadaduda.data.repository.ProdutoRepository
@@ -10,7 +13,6 @@ import com.doceriadaduda.model.Venda
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -18,9 +20,13 @@ import java.time.format.DateTimeFormatter
 class VendaViewModel(private val produtoRepository: ProdutoRepository,
                        private val vendaRepository: VendaRepository,
                        private val apiService: ApiService,
-                       private val sharedViewModel: SharedViewModel) : ViewModel() {
+                       private val sharedViewModel: SharedViewModel,
+                       private val paymentManager: PaymentManager) : ViewModel() {
 
     private val TAXA_CREDITO = 4.39 // percentual
+
+    private val _produtosCompletos = MutableStateFlow<List<com.doceriadaduda.model.Produto>>(emptyList())
+    val produtosCompletos: StateFlow<List<com.doceriadaduda.model.Produto>> = _produtosCompletos.asStateFlow()
 
     private val _produtosAtivos = MutableStateFlow<List<String>>(emptyList())
     val produtosAtivos: StateFlow<List<String>> = _produtosAtivos.asStateFlow()
@@ -34,6 +40,14 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
     private val _mensagemStatusColor = MutableStateFlow(0xFF000000) // Default black
     val mensagemStatusColor: StateFlow<Long> = _mensagemStatusColor.asStateFlow()
 
+    private val _isAguardandoPagamento = MutableStateFlow(false)
+    val isAguardandoPagamento: StateFlow<Boolean> = _isAguardandoPagamento.asStateFlow()
+
+    private val _showNoDeviceDialog = MutableStateFlow(false)
+    val showNoDeviceDialog: StateFlow<Boolean> = _showNoDeviceDialog.asStateFlow()
+
+    private var pendingVendaData: Triple<com.doceriadaduda.model.Produto, Int, String>? = null
+
     init {
         loadProdutosAtivos()
         loadVendasHoje()
@@ -42,6 +56,7 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
     private fun loadProdutosAtivos() {
         viewModelScope.launch {
             produtoRepository.getProdutosAtivos().collect {
+                _produtosCompletos.value = it
                 _produtosAtivos.value = it.map { prod -> prod.nome }
             }
         }
@@ -56,7 +71,7 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
         }
     }
 
-    fun registrarVenda(produtoNome: String?, quantidadeStr: String?, formaPagamento: String?) {
+    fun registrarVenda(produtoNome: String?, quantidadeStr: String?, formaPagamento: String?, onComplete: () -> Unit = {}) {
         if (produtoNome.isNullOrBlank() || quantidadeStr.isNullOrBlank()) {
             _mensagemStatus.value = "Preencha todos os campos!"
             _mensagemStatusColor.value = 0xFFE53935 // RED
@@ -66,75 +81,118 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
         viewModelScope.launch {
             try {
                 val quantidade = quantidadeStr.toInt()
-                if (quantidade <= 0) {
-                    _mensagemStatus.value = "Quantidade deve ser maior que zero!"
-                    _mensagemStatusColor.value = 0xFFE53935 // RED
-                    return@launch
-                }
+                val produto = produtoRepository.getProdutoByNome(produtoNome) ?: return@launch
 
-                val produto = produtoRepository.getProdutoByNome(produtoNome)
-                if (produto == null) {
-                    _mensagemStatus.value = "Produto nao encontrado!"
-                    _mensagemStatusColor.value = 0xFFE53935 // RED
-                    return@launch
-                }
-
-                if (produto.quantidadeEstoque < quantidade) {
-                    _mensagemStatus.value = "Estoque insuficiente! Disponivel: ${produto.quantidadeEstoque}"
-                    _mensagemStatusColor.value = 0xFFE53935 // RED
-                    return@launch
-                }
-
-                val total = quantidade * produto.precoVenda
-                var taxa = 0.0
-                var valorLiq = total
-
-                // Envio para a API Django
-                try {
-                    val pedidoApi = PedidoApi(produtoNome, quantidade, produto.precoVenda)
-                    val respostaApi = apiService.criarPedido(pedidoApi)
-                    println("Pedido criado na API: $respostaApi")
-                } catch (e: Exception) {
-                    println("Erro ao enviar para API: ${e.message}")
-                }
-
-                // Aplicar taxa de 4,39% no cartao de credito
-                if (formaPagamento == "Cartao Credito") {
-                    taxa = total * (TAXA_CREDITO / 100)
-                    valorLiq = total - taxa
-                }
-
-                val venda = Venda(
-                    produtoId = produto.id,
-                    quantidade = quantidade,
-                    precoUnitarioHistorico = produto.precoVenda,
-                    valorTotal = total,
-                    formaPagamento = formaPagamento,
-                    taxaCartao = taxa,
-                    valorLiquido = valorLiq,
-                    dataVenda = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                )
-                vendaRepository.insert(venda)
-
-                val produtoAtualizado = produto.copy(quantidadeEstoque = produto.quantidadeEstoque - quantidade)
-                produtoRepository.update(produtoAtualizado)
-
-                if (formaPagamento == "Cartao Credito") {
-                    _mensagemStatus.value = "Venda realizada! ${produto.nome} x$quantidade = ${sharedViewModel.fmtReal(total)}\n" +
-                            "Taxa cartao (${TAXA_CREDITO}%): -${sharedViewModel.fmtReal(taxa)}\n" +
-                            "Valor liquido: ${sharedViewModel.fmtReal(valorLiq)}"
+                if (formaPagamento == "Dinheiro") {
+                    // Dinheiro salva direto
+                    finalizarRegistroVenda(produto, quantidade, formaPagamento, onComplete)
                 } else {
-                    _mensagemStatus.value = "Venda realizada! ${produto.nome} x$quantidade = ${sharedViewModel.fmtReal(total)}"
-                }
-                _mensagemStatusColor.value = 0xFF4CAF50 // GREEN
+                    // Cartão ou PIX (via maquininha)
+                    val context = com.doceriadaduda.di.AppModule.applicationContext
+                    val prefs = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+                    val preferredProviderName = prefs.getString("preferred_payment_provider", PaymentProvider.MERCADO_PAGO.name)
+                    val provider = try {
+                        PaymentProvider.valueOf(preferredProviderName ?: PaymentProvider.MERCADO_PAGO.name)
+                    } catch (e: Exception) {
+                        PaymentProvider.MERCADO_PAGO
+                    }
 
-            } catch (e: NumberFormatException) {
-                _mensagemStatus.value = "Quantidade invalida!"
-                _mensagemStatusColor.value = 0xFFE53935 // RED
+                    if (!paymentManager.isDispositivoConectado(context, provider)) {
+                        pendingVendaData = Triple(produto, quantidade, formaPagamento!!)
+                        _showNoDeviceDialog.value = true
+                        return@launch
+                    }
+
+                    executarFluxoPagamento(produto, quantidade, formaPagamento!!, provider, onComplete)
+                }
             } catch (e: Exception) {
                 _mensagemStatus.value = "Erro: ${e.message}"
                 _mensagemStatusColor.value = 0xFFE53935 // RED
             }
         }
+    }
+
+    fun registrarVendaManual(onComplete: () -> Unit = {}) {
+        val data = pendingVendaData ?: return
+        _showNoDeviceDialog.value = false
+        viewModelScope.launch {
+            finalizarRegistroVenda(data.first, data.second, data.third, onComplete)
+        }
+    }
+
+    fun cancelarVendaManual() {
+        _showNoDeviceDialog.value = false
+        pendingVendaData = null
+    }
+
+    private fun executarFluxoPagamento(
+        produto: com.doceriadaduda.model.Produto,
+        quantidade: Int,
+        formaPagamento: String,
+        provider: PaymentProvider,
+        onComplete: () -> Unit
+    ) {
+        _isAguardandoPagamento.value = true
+        viewModelScope.launch {
+            paymentManager.processarPagamento(
+                provider = provider,
+                valor = quantidade * produto.precoVenda,
+                metodo = formaPagamento,
+                callback = object : PaymentCallback {
+                    override fun onSucesso(idTransacao: String) {
+                        viewModelScope.launch {
+                            finalizarRegistroVenda(produto, quantidade, formaPagamento, onComplete)
+                            _isAguardandoPagamento.value = false
+                        }
+                    }
+
+                    override fun onError(mensagem: String) {
+                        _mensagemStatus.value = "Erro no pagamento: $mensagem"
+                        _mensagemStatusColor.value = 0xFFE53935 // RED
+                        _isAguardandoPagamento.value = false
+                    }
+
+                    override fun onStatus(mensagem: String) {
+                        _mensagemStatus.value = mensagem
+                        _mensagemStatusColor.value = 0xFF000000
+                    }
+                }
+            )
+        }
+    }
+
+    private suspend fun finalizarRegistroVenda(
+        produto: com.doceriadaduda.model.Produto, 
+        quantidade: Int, 
+        formaPagamento: String?, 
+        onComplete: () -> Unit
+    ) {
+        val total = quantidade * produto.precoVenda
+        var taxa = 0.0
+        var valorLiq = total
+
+        if (formaPagamento == "Cartao Credito") {
+            taxa = total * (TAXA_CREDITO / 100)
+            valorLiq = total - taxa
+        }
+
+        val venda = Venda(
+            produtoId = produto.id,
+            quantidade = quantidade,
+            precoUnitarioHistorico = produto.precoVenda,
+            valorTotal = total,
+            formaPagamento = formaPagamento ?: "Dinheiro",
+            taxaCartao = taxa,
+            valorLiquido = valorLiq,
+            dataVenda = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        )
+        vendaRepository.insert(venda)
+
+        val produtoAtualizado = produto.copy(quantidadeEstoque = produto.quantidadeEstoque - quantidade)
+        produtoRepository.update(produtoAtualizado)
+        
+        _mensagemStatus.value = "Venda de ${produto.nome} finalizada!"
+        _mensagemStatusColor.value = 0xFF4CAF50 // GREEN
+        onComplete()
     }
 }

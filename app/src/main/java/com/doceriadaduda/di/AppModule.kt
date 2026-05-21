@@ -3,6 +3,7 @@ package com.doceriadaduda.di
 import android.content.Context
 import com.doceriadaduda.data.local.local.AppDatabase
 import com.doceriadaduda.data.remote.ApiService
+import com.doceriadaduda.data.payment.PaymentManager
 import com.doceriadaduda.data.repository.DespesaRepository
 import com.doceriadaduda.data.repository.FechamentoRepository
 import com.doceriadaduda.data.repository.ProdutoRepository
@@ -18,7 +19,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object AppModule {
 
-    private lateinit var applicationContext: Context
+    lateinit var applicationContext: Context
 
     fun init(context: Context) {
         applicationContext = context.applicationContext
@@ -38,6 +39,8 @@ object AppModule {
     val despesaRepository: DespesaRepository by lazy { DespesaRepository(despesaDao) }
     val fechamentoRepository: FechamentoRepository by lazy { FechamentoRepository(fechamentoDao) }
 
+    val paymentManager: PaymentManager by lazy { PaymentManager() }
+
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl("http://127.0.0.1:8010/") // Base URL da sua API Django
@@ -54,7 +57,7 @@ object AppModule {
     }
 
     val vendaViewModel: VendaViewModel by lazy {
-        VendaViewModel(produtoRepository, vendaRepository, apiService, sharedViewModel)
+        VendaViewModel(produtoRepository, vendaRepository, apiService, sharedViewModel, paymentManager)
     }
 
     val estoqueViewModel: EstoqueViewModel by lazy {
@@ -66,6 +69,6 @@ object AppModule {
     }
 
     val relatoriosViewModel: RelatoriosViewModel by lazy {
-        RelatoriosViewModel(vendaRepository, despesaRepository, fechamentoRepository, sharedViewModel)
+        RelatoriosViewModel(vendaRepository, despesaRepository, fechamentoRepository, produtoRepository, sharedViewModel)
     }
 }

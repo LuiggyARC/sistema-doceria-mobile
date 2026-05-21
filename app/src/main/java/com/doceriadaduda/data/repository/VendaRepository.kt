@@ -5,6 +5,7 @@ import com.doceriadaduda.data.local.local.dao.MediaVendasDiaSemana
 import com.doceriadaduda.data.local.local.dao.TopVendidoDia
 import com.doceriadaduda.data.local.local.dao.TopVendidoMes
 import com.doceriadaduda.data.local.local.dao.VendaDao
+import com.doceriadaduda.data.local.local.dao.VendasPorCategoria
 import com.doceriadaduda.data.local.local.dao.VendasPorFormaPagamento
 import com.doceriadaduda.model.Venda
 import kotlinx.coroutines.flow.Flow
@@ -36,4 +37,10 @@ class VendaRepository(private val vendaDao: VendaDao) {
     fun getTaxaCartaoMes(month: String): Flow<Double?> = vendaDao.getTaxaCartaoMes(month)
 
     fun getFaturamentoQtdMesAnterior(previousMonth: String): Flow<FaturamentoQtdMes> = vendaDao.getFaturamentoQtdMesAnterior(previousMonth)
+
+    fun getVendasPorCategoriaMes(month: String): Flow<List<VendasPorCategoria>> = vendaDao.getVendasPorCategoriaMes(month)
+
+    fun getLucroEstimadoMes(month: String): Flow<Double?> = vendaDao.getLucroEstimadoMes(month)
+
+    fun getLucroEstimadoHoje(today: String): Flow<Double?> = vendaDao.getLucroEstimadoHoje(today)
 }

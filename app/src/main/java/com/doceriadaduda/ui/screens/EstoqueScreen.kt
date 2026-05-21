@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.RestoreFromTrash
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
@@ -27,9 +29,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -49,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.doceriadaduda.di.AppModule
 import com.doceriadaduda.model.Produto
-import com.doceriadaduda.ui.theme.Background
 import com.doceriadaduda.ui.theme.Blue
 import com.doceriadaduda.ui.theme.Green
 import com.doceriadaduda.ui.theme.Orange
@@ -73,19 +75,19 @@ fun EstoqueScreen(estoqueViewModel: EstoqueViewModel = AppModule.estoqueViewMode
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         item {
             Text(
-                text = "Estoque / Cardapio",
+                text = "Estoque / Cardápio",
                 fontSize = 24.sp,
                 color = Secondary,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.fillMaxWidth()
             )
-            Divider(color = Secondary, thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(color = Secondary, thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
         }
 
         item {
@@ -96,7 +98,7 @@ fun EstoqueScreen(estoqueViewModel: EstoqueViewModel = AppModule.estoqueViewMode
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Adicionar Produto", tint = Color.White)
-                Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text("Adicionar Novo Produto", color = Color.White, fontSize = 16.sp)
             }
         }
@@ -127,8 +129,7 @@ fun EstoqueScreen(estoqueViewModel: EstoqueViewModel = AppModule.estoqueViewMode
     if (showAddProductDialog) {
         AddProdutoDialog(
             onDismiss = { showAddProductDialog = false },
-            estoqueViewModel = estoqueViewModel,
-            sharedViewModel = sharedViewModel
+            estoqueViewModel = estoqueViewModel
         )
     }
 }
@@ -136,6 +137,7 @@ fun EstoqueScreen(estoqueViewModel: EstoqueViewModel = AppModule.estoqueViewMode
 @Composable
 fun ProdutoItem(produto: Produto, estoqueViewModel: EstoqueViewModel, sharedViewModel: SharedViewModel) {
     var showEditPanel by remember { mutableStateOf(false) }
+    var showWasteDialog by remember { mutableStateOf(false) }
     var showConfirmDeleteDialog by remember { mutableStateOf(false) }
     var qtdRepor by remember { mutableStateOf("") }
 
@@ -156,7 +158,7 @@ fun ProdutoItem(produto: Produto, estoqueViewModel: EstoqueViewModel, sharedView
                 ) {
                     Text(produto.nome, fontSize = 15.sp, color = TextColor, fontWeight = FontWeight.Bold)
                     Text(
-                        text = "Preco: ${sharedViewModel.fmtReal(produto.precoVenda)} | ${produto.categoria ?: "Geral"}",
+                        text = "Preço: ${sharedViewModel.fmtReal(produto.precoVenda)} | ${produto.categoria ?: "Geral"}",
                         fontSize = 11.sp,
                         color = TextColor
                     )
@@ -174,13 +176,12 @@ fun ProdutoItem(produto: Produto, estoqueViewModel: EstoqueViewModel, sharedView
                             color = if (produto.quantidadeEstoque <= produto.estoqueMinimo) Red else Green,
                             fontWeight = FontWeight.Bold
                         )
-                        if (produto.quantidadeEstoque <= produto.estoqueMinimo) {
-                            Spacer(modifier = Modifier.size(4.dp))
-                            Icon(Icons.Default.WarningAmber, contentDescription = "Estoque Baixo", tint = Orange, modifier = Modifier.size(16.dp))
-                        }
                     }
                 }
 
+                IconButton(onClick = { showWasteDialog = true }) {
+                    Icon(Icons.Default.RestoreFromTrash, contentDescription = "Desperdício", tint = Orange)
+                }
                 IconButton(onClick = { showEditPanel = !showEditPanel }) {
                     Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Secondary)
                 }
@@ -191,89 +192,110 @@ fun ProdutoItem(produto: Produto, estoqueViewModel: EstoqueViewModel, sharedView
 
             if (showEditPanel) {
                 Spacer(modifier = Modifier.height(10.dp))
-                Divider(color = Secondary, thickness = 1.dp)
+                HorizontalDivider(color = Secondary.copy(alpha = 0.3f), thickness = 1.dp)
                 Spacer(modifier = Modifier.height(10.dp))
 
                 var novoNome by remember { mutableStateOf(produto.nome) }
-                var novoPreco by remember { mutableStateOf(sharedViewModel.fmtReal(produto.precoVenda).replace("R$", "").trim()) }
+                var novoPreco by remember { mutableStateOf(produto.precoVenda.toString()) }
                 var novaCategoria by remember { mutableStateOf(produto.categoria ?: "Geral") }
 
                 OutlinedTextField(
                     value = novoNome,
                     onValueChange = { novoNome = it },
                     label = { Text("Novo nome") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Secondary,
-                        unfocusedBorderColor = Primary
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = novoPreco,
                     onValueChange = { novoPreco = it },
-                    label = { Text("Novo preco") },
+                    label = { Text("Novo preço") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Secondary,
-                        unfocusedBorderColor = Primary
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = novaCategoria,
                     onValueChange = { novaCategoria = it },
                     label = { Text("Categoria") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Secondary,
-                        unfocusedBorderColor = Primary
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = { estoqueViewModel.salvarEdicaoProduto(produto.id, produto.nome, novoNome, novoPreco, novaCategoria) },
                     modifier = Modifier.fillMaxWidth().height(40.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Green),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.Save, contentDescription = "Salvar Edicao", tint = Color.White)
-                    Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-                    Text("Salvar Edicao", color = Color.White)
+                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Salvar Alterações")
                 }
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedTextField(
-                    value = qtdRepor,
-                    onValueChange = { qtdRepor = it },
-                    label = { Text("Qtd a repor") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Secondary,
-                        unfocusedBorderColor = Primary
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Reposição de Estoque", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = qtdRepor,
+                        onValueChange = { qtdRepor = it },
+                        label = { Text("Qtd") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
                     )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = { estoqueViewModel.reporEstoque(produto.id, produto.nome, qtdRepor) },
-                    modifier = Modifier.fillMaxWidth().height(40.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Blue),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Repor Estoque", tint = Color.White)
-                    Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-                    Text("Repor Estoque", color = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { estoqueViewModel.reporEstoque(produto.id, produto.nome, qtdRepor) },
+                        modifier = Modifier.height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Blue),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Repor")
+                    }
                 }
             }
         }
     }
 
+    if (showWasteDialog) {
+        var qtdWaste by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showWasteDialog = false },
+            title = { Text("Registrar Desperdício") },
+            text = {
+                Column {
+                    Text("Produto: ${produto.nome}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = qtdWaste,
+                        onValueChange = { qtdWaste = it },
+                        label = { Text("Quantidade perdida") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val qtd = qtdWaste.toIntOrNull() ?: 0
+                    if (qtd > 0) {
+                        estoqueViewModel.registrarDesperdicio(produto.id, produto.nome, qtd)
+                        showWasteDialog = false
+                    }
+                }) {
+                    Text("Confirmar", color = Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showWasteDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
     if (showConfirmDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmDeleteDialog = false },
-            title = { Text("Confirmar exclusao") },
-            text = { Text("Deseja remover \'${produto.nome}\' do cardapio?") },
+            title = { Text("Confirmar exclusão") },
+            text = { Text("Deseja remover \'${produto.nome}\' do cardápio?") },
             confirmButton = {
                 TextButton(onClick = { estoqueViewModel.excluirProduto(produto.id, produto.nome); showConfirmDeleteDialog = false }) {
                     Text("Excluir", color = Red)
@@ -286,4 +308,41 @@ fun ProdutoItem(produto: Produto, estoqueViewModel: EstoqueViewModel, sharedView
             }
         )
     }
+}
+
+@Composable
+fun AddProdutoDialog(onDismiss: () -> Unit, estoqueViewModel: EstoqueViewModel) {
+    var nome by remember { mutableStateOf("") }
+    var preco by remember { mutableStateOf("") }
+    var categoria by remember { mutableStateOf("") }
+    var estoqueMinimo by remember { mutableStateOf("5") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Novo Produto") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = nome, onValueChange = { nome = it }, label = { Text("Nome do Produto") })
+                OutlinedTextField(
+                    value = preco, 
+                    onValueChange = { preco = it }, 
+                    label = { Text("Preço de Venda") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                OutlinedTextField(value = categoria, onValueChange = { categoria = it }, label = { Text("Categoria (ex: Bolos)") })
+                OutlinedTextField(value = estoqueMinimo, onValueChange = { estoqueMinimo = it }, label = { Text("Aviso de Estoque Baixo (Qtd)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                estoqueViewModel.adicionarProduto(nome, preco, categoria, estoqueMinimo)
+                onDismiss()
+            }) {
+                Text("Adicionar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
 }

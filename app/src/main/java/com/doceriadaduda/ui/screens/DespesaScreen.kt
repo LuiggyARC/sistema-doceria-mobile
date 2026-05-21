@@ -72,7 +72,7 @@ fun DespesaScreen(despesaViewModel: DespesaViewModel = AppModule.despesaViewMode
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
+            .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {

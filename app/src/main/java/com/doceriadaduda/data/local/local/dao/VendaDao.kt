@@ -46,6 +46,15 @@ interface VendaDao {
 
     @Query("SELECT COALESCE(SUM(valorTotal),0) as faturamento, COUNT(*) as quantidade FROM vendas WHERE STRFTIME(\"%Y-%m\", dataVenda) = :previousMonth")
     fun getFaturamentoQtdMesAnterior(previousMonth: String): Flow<FaturamentoQtdMes>
+
+    @Query("SELECT p.categoria, SUM(v.valorTotal) as total FROM vendas v JOIN produtos p ON v.produtoId = p.id WHERE STRFTIME(\"%Y-%m\", v.dataVenda) = :month GROUP BY p.categoria ORDER BY total DESC")
+    fun getVendasPorCategoriaMes(month: String): Flow<List<VendasPorCategoria>>
+
+    @Query("SELECT SUM(v.valorTotal - (p.precoCusto * v.quantidade)) FROM vendas v JOIN produtos p ON v.produtoId = p.id WHERE STRFTIME(\"%Y-%m\", v.dataVenda) = :month")
+    fun getLucroEstimadoMes(month: String): Flow<Double?>
+
+    @Query("SELECT SUM(v.valorTotal - (p.precoCusto * v.quantidade)) FROM vendas v JOIN produtos p ON v.produtoId = p.id WHERE DATE(v.dataVenda) = :today")
+    fun getLucroEstimadoHoje(today: String): Flow<Double?>
 }
 
 data class TopVendidoDia(val nome: String, val total: Int)
@@ -53,3 +62,4 @@ data class VendasPorFormaPagamento(val formaPagamento: String, val total: Double
 data class TopVendidoMes(val nome: String, val total: Int, val receita: Double)
 data class MediaVendasDiaSemana(val diaSemana: String, val total: Double, val diasDistintos: Int)
 data class FaturamentoQtdMes(val faturamento: Double, val quantidade: Int)
+data class VendasPorCategoria(val categoria: String?, val total: Double)
