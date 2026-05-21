@@ -3,6 +3,8 @@ package com.doceriadaduda.ui.screens
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Save
@@ -24,16 +26,19 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.core.content.ContextCompat
 import com.doceriadaduda.data.payment.PaymentProvider
 import com.doceriadaduda.di.AppModule
+import com.doceriadaduda.ui.theme.LocalDynamicThemeState
 
 @Composable
 fun ConfigScreen() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     val paymentManager = remember { AppModule.paymentManager }
+    val dynamicThemeState = LocalDynamicThemeState.current
     
     var mpPublicKey by remember { 
         mutableStateOf(prefs.getString("mp_public_key", "") ?: "") 
@@ -80,6 +85,7 @@ fun ConfigScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -248,6 +254,26 @@ fun ConfigScreen() {
             Icon(Icons.Default.Save, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text("Salvar Configurações")
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+        HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.outlineVariant)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                // Limpa as preferências de login
+                prefs.edit().remove("company_name").apply()
+                // Atualiza o estado global para deslogar
+                dynamicThemeState.companyName = "Pai D’égua Hub"
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Sair da Conta")
         }
         
         if (statusMessage.isNotBlank()) {

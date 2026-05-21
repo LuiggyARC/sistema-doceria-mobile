@@ -18,12 +18,53 @@ interface PaymentCallback {
 class PaymentManager {
     
     fun isDispositivoConectado(context: android.content.Context, provider: PaymentProvider): Boolean {
-        // A Azulzinha da Caixa é tratada de forma diferente (app-to-app ou via rede), 
-        // então consideramos sempre "disponível" para o fluxo
         if (provider == PaymentProvider.CAIXA_AZULZINHA) return true
 
         val bluetoothAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
-        return bluetoothAdapter?.isEnabled == true && bluetoothAdapter.bondedDevices.isNotEmpty()
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+            android.util.Log.d("PaymentManager", "Bluetooth nulo ou desligado")
+            return false
+        }
+
+        return try {
+            val bondedDevices = bluetoothAdapter.bondedDevices
+            if (bondedDevices.isNullOrEmpty()) {
+                android.util.Log.d("PaymentManager", "Nenhum dispositivo pareado")
+                return false
+            }
+
+            // Filtro rigoroso: apenas nomes conhecidos de terminais de pagamento
+            val keywords = listOf("PAX", "MP-", "D150", "D175", "D180", "STONE", "GERTEC", "BTPOS", "PAGS")
+            
+            var maquininhaAtiva = false
+            for (device in bondedDevices) {
+                val name = device.name?.uppercase() ?: ""
+                android.util.Log.d("PaymentManager", "Verificando dispositivo: $name")
+                if (keywords.any { name.contains(it) }) {
+                    android.util.Log.d("PaymentManager", "Dispositivo $name compatível. Checando conexão real...")
+                    // Tenta verificar se o dispositivo está REALMENTE conectado agora
+                    try {
+                        val isConnectedMethod = device.javaClass.getMethod("isConnected")
+                        val isConnected = isConnectedMethod.invoke(device) as Boolean
+                        android.util.Log.d("PaymentManager", "Conexão real com $name: $isConnected")
+                        if (isConnected) {
+                            maquininhaAtiva = true
+                            break
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.d("PaymentManager", "Erro ao checar conexão real com $name. Usando fallback pareado.")
+                        // Fallback: se não puder verificar conexão real, aceita o pareamento
+                        maquininhaAtiva = true
+                        break
+                    }
+                }
+            }
+            
+            maquininhaAtiva
+        } catch (e: SecurityException) {
+            android.util.Log.e("PaymentManager", "Erro de segurança ao checar bluetooth", e)
+            false
+        }
     }
 
     suspend fun processarPagamento(

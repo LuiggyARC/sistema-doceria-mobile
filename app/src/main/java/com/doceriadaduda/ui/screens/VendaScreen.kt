@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.doceriadaduda.data.payment.PaymentProvider
 import com.doceriadaduda.di.AppModule
 import com.doceriadaduda.ui.theme.Primary
 import com.doceriadaduda.ui.theme.Secondary
@@ -41,6 +42,7 @@ fun VendaScreen(vendaViewModel: VendaViewModel = AppModule.vendaViewModel,
     val mensagemStatusColor by vendaViewModel.mensagemStatusColor.collectAsState()
     val isAguardandoPagamento by vendaViewModel.isAguardandoPagamento.collectAsState()
     val showNoDeviceDialog by vendaViewModel.showNoDeviceDialog.collectAsState()
+    val preferredProvider by vendaViewModel.preferredProvider.collectAsState()
 
     var showVendaDialog by remember { mutableStateOf(false) }
 
@@ -158,6 +160,8 @@ fun VendaScreen(vendaViewModel: VendaViewModel = AppModule.vendaViewModel,
         QuickVendaDialog(
             produtos = produtosCompletos,
             isAguardandoPagamento = isAguardandoPagamento,
+            activeProvider = preferredProvider,
+            onProviderChange = { vendaViewModel.setPreferredProvider(it) },
             onDismiss = { if (!isAguardandoPagamento) showVendaDialog = false },
             onConfirm = { produto, qtd, pagamento ->
                 vendaViewModel.registrarVenda(produto.nome, qtd.toString(), pagamento) {
@@ -173,6 +177,8 @@ fun VendaScreen(vendaViewModel: VendaViewModel = AppModule.vendaViewModel,
 fun QuickVendaDialog(
     produtos: List<com.doceriadaduda.model.Produto>,
     isAguardandoPagamento: Boolean,
+    activeProvider: com.doceriadaduda.data.payment.PaymentProvider,
+    onProviderChange: (com.doceriadaduda.data.payment.PaymentProvider) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (com.doceriadaduda.model.Produto, Int, String) -> Unit,
     sharedViewModel: SharedViewModel
@@ -260,6 +266,20 @@ fun QuickVendaDialog(
                             Text("Total: ${sharedViewModel.fmtReal(prod.precoVenda * quantidade)}", fontSize = 18.sp, fontWeight = FontWeight.Black, color = Green, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                             
                             Spacer(modifier = Modifier.height(24.dp))
+                            Text("Maquininha Ativa:", fontWeight = FontWeight.Bold)
+                            Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                ProviderMiniButton("MP", activeProvider == PaymentProvider.MERCADO_PAGO) { 
+                                    onProviderChange(PaymentProvider.MERCADO_PAGO) 
+                                }
+                                ProviderMiniButton("Caixa", activeProvider == PaymentProvider.CAIXA_AZULZINHA) { 
+                                    onProviderChange(PaymentProvider.CAIXA_AZULZINHA) 
+                                }
+                                ProviderMiniButton("Stone", activeProvider == PaymentProvider.STONE) { 
+                                    onProviderChange(PaymentProvider.STONE)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
                             Text("Forma de Pagamento:", fontWeight = FontWeight.Bold)
                             
                             Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -286,6 +306,21 @@ fun QuickVendaDialog(
             }
         }
     )
+}
+
+@Composable
+fun ProviderMiniButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray
+        ),
+        modifier = Modifier.height(32.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+        shape = RoundedCornerShape(4.dp)
+    ) {
+        Text(label, fontSize = 10.sp, color = if (isSelected) Color.White else Color.Black)
+    }
 }
 
 @Composable

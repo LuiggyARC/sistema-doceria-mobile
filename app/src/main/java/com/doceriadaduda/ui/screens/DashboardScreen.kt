@@ -299,30 +299,6 @@ fun DashboardScreen(
                 TopVendidoItem(it.first, it.second)
             }
         }
-
-        item {
-            val dynamicThemeState = LocalDynamicThemeState.current
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            OutlinedButton(
-                onClick = {
-                    dynamicThemeState.companyName = "Pai D’égua Hub"
-                    val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                    prefs.edit().putString("company_name", "Pai D’égua Hub").apply()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Red),
-                border = BorderStroke(1.dp, Red),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Voltar para Login / Trocar Nome")
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
     }
 
     if (showMetaDialog) {

@@ -43,6 +43,9 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
     private val _isAguardandoPagamento = MutableStateFlow(false)
     val isAguardandoPagamento: StateFlow<Boolean> = _isAguardandoPagamento.asStateFlow()
 
+    private val _preferredProvider = MutableStateFlow(PaymentProvider.MERCADO_PAGO)
+    val preferredProvider: StateFlow<PaymentProvider> = _preferredProvider.asStateFlow()
+
     private val _showNoDeviceDialog = MutableStateFlow(false)
     val showNoDeviceDialog: StateFlow<Boolean> = _showNoDeviceDialog.asStateFlow()
 
@@ -51,6 +54,25 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
     init {
         loadProdutosAtivos()
         loadVendasHoje()
+        loadPreferredProvider()
+    }
+
+    private fun loadPreferredProvider() {
+        val context = com.doceriadaduda.di.AppModule.applicationContext
+        val prefs = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+        val providerName = prefs.getString("preferred_payment_provider", PaymentProvider.MERCADO_PAGO.name)
+        _preferredProvider.value = try {
+            PaymentProvider.valueOf(providerName ?: PaymentProvider.MERCADO_PAGO.name)
+        } catch (e: Exception) {
+            PaymentProvider.MERCADO_PAGO
+        }
+    }
+
+    fun setPreferredProvider(provider: PaymentProvider) {
+        _preferredProvider.value = provider
+        val context = com.doceriadaduda.di.AppModule.applicationContext
+        val prefs = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+        prefs.edit().putString("preferred_payment_provider", provider.name).apply()
     }
 
     private fun loadProdutosAtivos() {
@@ -89,21 +111,18 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
                 } else {
                     // Cartão ou PIX (via maquininha)
                     val context = com.doceriadaduda.di.AppModule.applicationContext
-                    val prefs = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
-                    val preferredProviderName = prefs.getString("preferred_payment_provider", PaymentProvider.MERCADO_PAGO.name)
-                    val provider = try {
-                        PaymentProvider.valueOf(preferredProviderName ?: PaymentProvider.MERCADO_PAGO.name)
-                    } catch (e: Exception) {
-                        PaymentProvider.MERCADO_PAGO
-                    }
+                    val provider = _preferredProvider.value
 
-                    if (!paymentManager.isDispositivoConectado(context, provider)) {
+                    android.util.Log.d("VendaViewModel", "Iniciando checagem de dispositivo para provider: $provider")
+                    val isConnected = paymentManager.isDispositivoConectado(context, provider)
+                    android.util.Log.d("VendaViewModel", "Dispositivo conectado? $isConnected")
+
+                    if (!isConnected) {
                         pendingVendaData = Triple(produto, quantidade, formaPagamento!!)
                         _showNoDeviceDialog.value = true
-                        return@launch
+                    } else {
+                        executarFluxoPagamento(produto, quantidade, formaPagamento!!, provider, onComplete)
                     }
-
-                    executarFluxoPagamento(produto, quantidade, formaPagamento!!, provider, onComplete)
                 }
             } catch (e: Exception) {
                 _mensagemStatus.value = "Erro: ${e.message}"
