@@ -6,17 +6,17 @@ import kotlinx.coroutines.flow.Flow
 
 class ProdutoRepository(private val produtoDao: ProdutoDao) {
 
-    fun getProdutosAtivos(): Flow<List<Produto>> = produtoDao.getProdutosAtivos()
+    fun getProdutosAtivos(companyId: Int): Flow<List<Produto>> = produtoDao.getProdutosAtivos(companyId)
 
-    suspend fun getProdutoById(produtoId: Int): Produto? = produtoDao.getProdutoById(produtoId)
+    suspend fun getProdutoById(produtoId: Int, companyId: Int): Produto? = produtoDao.getProdutoById(produtoId, companyId)
 
-    suspend fun getProdutoByNome(nomeProduto: String): Produto? = produtoDao.getProdutoByNome(nomeProduto)
+    suspend fun getProdutoByNome(nomeProduto: String, companyId: Int): Produto? = produtoDao.getProdutoByNome(nomeProduto, companyId)
 
     suspend fun insert(produto: Produto) = produtoDao.insert(produto)
 
     suspend fun update(produto: Produto) = produtoDao.update(produto)
 
-    suspend fun desativarProduto(produtoId: Int) = produtoDao.desativarProduto(produtoId)
+    suspend fun desativarProduto(produtoId: Int, companyId: Int) = produtoDao.desativarProduto(produtoId, companyId)
 
-    fun getEstoqueBaixoCount(): Flow<Int> = produtoDao.getEstoqueBaixoCount()
+    fun getEstoqueBaixoCount(companyId: Int): Flow<Int> = produtoDao.getEstoqueBaixoCount(companyId)
 }

@@ -7,20 +7,23 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.doceriadaduda.data.local.local.dao.DespesaDao
+import com.doceriadaduda.data.local.local.dao.EmpresaDao
 import com.doceriadaduda.data.local.local.dao.FechamentoDao
 import com.doceriadaduda.data.local.local.dao.ProdutoDao
 import com.doceriadaduda.data.local.local.dao.VendaDao
 import com.doceriadaduda.model.Despesa
+import com.doceriadaduda.model.Empresa
 import com.doceriadaduda.model.Fechamento
 import com.doceriadaduda.model.Produto
 import com.doceriadaduda.model.Venda
 
-@Database(entities = [Produto::class, Venda::class, Despesa::class, Fechamento::class], version = 3, exportSchema = false)
+@Database(entities = [Produto::class, Venda::class, Despesa::class, Fechamento::class, Empresa::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun produtoDao(): ProdutoDao
     abstract fun vendaDao(): VendaDao
     abstract fun despesaDao(): DespesaDao
     abstract fun fechamentoDao(): FechamentoDao
+    abstract fun empresaDao(): EmpresaDao
 
     companion object {
         @Volatile
@@ -31,9 +34,9 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "doceria.db"
+                    "doceria_v4.db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
                 INSTANCE = instance
                 instance
@@ -50,6 +53,29 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE produtos ADD COLUMN precoCusto REAL NOT NULL DEFAULT 0.0")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Adiciona companyId a todas as tabelas
+                database.execSQL("ALTER TABLE produtos ADD COLUMN companyId INTEGER NOT NULL DEFAULT 1")
+                database.execSQL("ALTER TABLE vendas ADD COLUMN companyId INTEGER NOT NULL DEFAULT 1")
+                database.execSQL("ALTER TABLE despesas ADD COLUMN companyId INTEGER NOT NULL DEFAULT 1")
+                database.execSQL("ALTER TABLE fechamentos ADD COLUMN companyId INTEGER NOT NULL DEFAULT 1")
+                
+                // Cria a tabela de empresas
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS empresas (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        nome TEXT NOT NULL,
+                        email TEXT NOT NULL,
+                        senhaHash TEXT NOT NULL,
+                        logoPath TEXT,
+                        isAdmin INTEGER NOT NULL DEFAULT 0,
+                        ativa INTEGER NOT NULL DEFAULT 1
+                    )
+                """.trimIndent())
             }
         }
     }

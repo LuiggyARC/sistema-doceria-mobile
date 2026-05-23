@@ -11,11 +11,11 @@ interface FechamentoDao {
     @Insert
     suspend fun insert(fechamento: Fechamento)
 
-    @Query("SELECT * FROM fechamentos WHERE data = :dataStr")
-    suspend fun getFechamentoByData(dataStr: String): Fechamento?
+    @Query("SELECT * FROM fechamentos WHERE companyId = :companyId AND data = :dataStr")
+    suspend fun getFechamentoByData(dataStr: String, companyId: Int): Fechamento?
 
-    @Query("SELECT data, qtdVendas, faturamento, despesas, saldo FROM fechamentos ORDER BY data DESC LIMIT 10")
-    fun getFechamentosRecentes(): Flow<List<FechamentoResumo>>
+    @Query("SELECT data, qtdVendas, faturamento, despesas, saldo FROM fechamentos WHERE companyId = :companyId ORDER BY data DESC LIMIT 10")
+    fun getFechamentosRecentes(companyId: Int): Flow<List<FechamentoResumo>>
 }
 
 data class FechamentoResumo(val data: String, val qtdVendas: Int, val faturamento: Double, val despesas: Double, val saldo: Double)

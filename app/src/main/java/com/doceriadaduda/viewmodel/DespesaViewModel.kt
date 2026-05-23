@@ -12,8 +12,13 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+import com.doceriadaduda.data.local.SessionManager
+
 class DespesaViewModel(private val despesaRepository: DespesaRepository,
+                         private val sessionManager: SessionManager,
                          private val sharedViewModel: SharedViewModel) : ViewModel() {
+
+    private val companyId get() = sessionManager.companyId
 
     private val _ultimasDespesas = MutableStateFlow<List<DespesaResumo>>(emptyList())
     val ultimasDespesas: StateFlow<List<DespesaResumo>> = _ultimasDespesas.asStateFlow()
@@ -30,7 +35,7 @@ class DespesaViewModel(private val despesaRepository: DespesaRepository,
 
     fun loadUltimasDespesas() {
         viewModelScope.launch {
-            despesaRepository.getUltimasDespesas().collect {
+            despesaRepository.getUltimasDespesas(companyId).collect {
                 _ultimasDespesas.value = it
             }
         }
@@ -53,6 +58,7 @@ class DespesaViewModel(private val despesaRepository: DespesaRepository,
                 }
 
                 val despesa = Despesa(
+                    companyId = companyId,
                     descricao = descricao.trim(),
                     categoria = categoria,
                     tipo = "Variavel", // Hardcoded as in Python version
@@ -63,9 +69,6 @@ class DespesaViewModel(private val despesaRepository: DespesaRepository,
                 _mensagemStatus.value = "Despesa \'${descricao}\' registrada!"
                 _mensagemStatusColor.value = 0xFF4CAF50 // GREEN
                 loadUltimasDespesas()
-            } catch (e: NumberFormatException) {
-                _mensagemStatus.value = "Valor invalido! Use virgula ou ponto."
-                _mensagemStatusColor.value = 0xFFE53935 // RED
             } catch (e: Exception) {
                 _mensagemStatus.value = "Erro: ${e.message}"
                 _mensagemStatusColor.value = 0xFFE53935 // RED

@@ -18,7 +18,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.doceriadaduda.di.AppModule
 import com.doceriadaduda.ui.screens.*
+import com.doceriadaduda.data.local.SessionManager
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
@@ -29,6 +31,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     object Despesa : Screen("despesa", "Despesa", Icons.AutoMirrored.Filled.ReceiptLong)
     object Relatorios : Screen("relatorios", "Relatorios", Icons.Default.BarChart)
     object Config : Screen("config", "Ajustes", Icons.Default.Settings)
+    object Admin : Screen("admin", "Painel Admin", Icons.Default.AdminPanelSettings)
 }
 
 val items = listOf(
@@ -48,14 +51,20 @@ fun AppNavigation() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     
-    var isLoggedIn by remember(dynamicThemeState.companyName) { 
-        mutableStateOf(dynamicThemeState.companyName != "Pai D’égua Hub" && dynamicThemeState.companyName.isNotBlank())
+    val sessionManager = remember { AppModule.sessionManager }
+    var isLoggedIn by remember { mutableStateOf(sessionManager.isLoggedIn()) }
+
+    // Observa mudanças no estado global da empresa para atualizar o login
+    LaunchedEffect(dynamicThemeState.companyName) {
+        isLoggedIn = sessionManager.isLoggedIn()
     }
 
     if (!isLoggedIn) {
         NavHost(navController, startDestination = Screen.Login.route) {
             composable(Screen.Login.route) {
-                LoginScreen(onLoginSuccess = { _ -> })
+                LoginScreen(onLoginSuccess = { _ -> 
+                    // O estado isLoggedIn agora é observado pelo dynamicThemeState.companyName
+                })
             }
         }
     } else {
@@ -76,8 +85,11 @@ fun AppNavigation() {
                     
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
+                    val isAdmin = sessionManager.isAdmin
                     
-                    items.forEach { screen ->
+                    val visibleItems = if (isAdmin) items + Screen.Admin else items
+
+                    visibleItems.forEach { screen ->
                         NavigationDrawerItem(
                             icon = { Icon(screen.icon, contentDescription = null) },
                             label = { Text(screen.label) },
@@ -125,6 +137,7 @@ fun AppNavigation() {
                     composable(Screen.Despesa.route) { DespesaScreen() }
                     composable(Screen.Relatorios.route) { RelatoriosScreen() }
                     composable(Screen.Config.route) { ConfigScreen() }
+                    composable(Screen.Admin.route) { AdminScreen() }
                 }
             }
         }

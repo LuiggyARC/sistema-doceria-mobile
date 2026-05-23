@@ -2,6 +2,7 @@ package com.doceriadaduda.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.doceriadaduda.data.local.SessionManager
 import com.doceriadaduda.data.payment.PaymentCallback
 import com.doceriadaduda.data.payment.PaymentManager
 import com.doceriadaduda.data.payment.PaymentProvider
@@ -20,8 +21,10 @@ import java.time.format.DateTimeFormatter
 class VendaViewModel(private val produtoRepository: ProdutoRepository,
                        private val vendaRepository: VendaRepository,
                        private val apiService: ApiService,
-                       private val sharedViewModel: SharedViewModel,
+                       private val sessionManager: SessionManager,
                        private val paymentManager: PaymentManager) : ViewModel() {
+
+    private val companyId get() = sessionManager.companyId
 
     private val TAXA_CREDITO = 4.39 // percentual
 
@@ -77,7 +80,7 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
 
     private fun loadProdutosAtivos() {
         viewModelScope.launch {
-            produtoRepository.getProdutosAtivos().collect {
+            produtoRepository.getProdutosAtivos(companyId).collect {
                 _produtosCompletos.value = it
                 _produtosAtivos.value = it.map { prod -> prod.nome }
             }
@@ -87,7 +90,7 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
     private fun loadVendasHoje() {
         viewModelScope.launch {
             val today = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE)
-            vendaRepository.getVendasHoje(today).collect {
+            vendaRepository.getVendasHoje(today, companyId).collect {
                 _vendasHoje.value = it
             }
         }
@@ -103,7 +106,7 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
         viewModelScope.launch {
             try {
                 val quantidade = quantidadeStr.toInt()
-                val produto = produtoRepository.getProdutoByNome(produtoNome) ?: return@launch
+                val produto = produtoRepository.getProdutoByNome(produtoNome, companyId) ?: return@launch
 
                 if (formaPagamento == "Dinheiro") {
                     // Dinheiro salva direto
@@ -196,6 +199,7 @@ class VendaViewModel(private val produtoRepository: ProdutoRepository,
         }
 
         val venda = Venda(
+            companyId = companyId,
             produtoId = produto.id,
             quantidade = quantidade,
             precoUnitarioHistorico = produto.precoVenda,

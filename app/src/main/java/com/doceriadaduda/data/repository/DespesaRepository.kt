@@ -10,15 +10,15 @@ class DespesaRepository(private val despesaDao: DespesaDao) {
 
     suspend fun insert(despesa: Despesa) = despesaDao.insert(despesa)
 
-    fun getUltimasDespesas(): Flow<List<DespesaResumo>> = despesaDao.getUltimasDespesas()
+    fun getUltimasDespesas(companyId: Int): Flow<List<DespesaResumo>> = despesaDao.getUltimasDespesas(companyId)
 
-    fun getDespesasTotalHoje(today: String): Flow<Double?> = despesaDao.getDespesasTotalHoje(today)
+    fun getDespesasTotalHoje(today: String, companyId: Int): Flow<Double?> = despesaDao.getDespesasTotalHoje(today, companyId)
 
-    fun getDespesasTotalMes(month: String): Flow<Double?> = despesaDao.getDespesasTotalMes(month)
+    fun getDespesasTotalMes(month: String, companyId: Int): Flow<Double?> = despesaDao.getDespesasTotalMes(month, companyId)
 
-    fun getDespesasTotalUltimos60Dias(): Flow<Double?> = despesaDao.getDespesasTotalUltimos60Dias()
+    fun getDespesasTotalUltimos60Dias(companyId: Int): Flow<Double?> = despesaDao.getDespesasTotalUltimos60Dias(companyId)
 
-    fun getDespesasPorCategoriaMes(month: String): Flow<List<DespesaPorCategoria>> = despesaDao.getDespesasPorCategoriaMes(month)
+    fun getDespesasPorCategoriaMes(month: String, companyId: Int): Flow<List<DespesaPorCategoria>> = despesaDao.getDespesasPorCategoriaMes(month, companyId)
 
-    fun getDespesasTotalMesAnterior(previousMonth: String): Flow<Double?> = despesaDao.getDespesasTotalMesAnterior(previousMonth)
+    fun getDespesasTotalMesAnterior(previousMonth: String, companyId: Int): Flow<Double?> = despesaDao.getDespesasTotalMesAnterior(previousMonth, companyId)
 }

@@ -9,8 +9,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+import com.doceriadaduda.data.local.SessionManager
+
 class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
-                         private val sharedViewModel: SharedViewModel) : ViewModel() {
+                         private val sessionManager: SessionManager) : ViewModel() {
+
+    private val companyId get() = sessionManager.companyId
 
     private val _produtosAtivos = MutableStateFlow<List<Produto>>(emptyList())
     val produtosAtivos: StateFlow<List<Produto>> = _produtosAtivos.asStateFlow()
@@ -27,7 +31,7 @@ class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
 
     fun loadProdutosAtivos() {
         viewModelScope.launch {
-            produtoRepository.getProdutosAtivos().collect {
+            produtoRepository.getProdutosAtivos(companyId).collect {
                 _produtosAtivos.value = it
             }
         }
@@ -47,7 +51,7 @@ class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
                     _mensagemStatusColor.value = 0xFFE53935 // RED
                     return@launch
                 }
-                val produto = produtoRepository.getProdutoById(produtoId)
+                val produto = produtoRepository.getProdutoById(produtoId, companyId)
                 if (produto != null) {
                     val produtoAtualizado = produto.copy(quantidadeEstoque = produto.quantidadeEstoque + qtdRepor)
                     produtoRepository.update(produtoAtualizado)
@@ -67,7 +71,7 @@ class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
     fun registrarDesperdicio(produtoId: Int, nomeProduto: String, quantidade: Int) {
         viewModelScope.launch {
             try {
-                val produto = produtoRepository.getProdutoById(produtoId)
+                val produto = produtoRepository.getProdutoById(produtoId, companyId)
                 if (produto != null) {
                     if (produto.quantidadeEstoque < quantidade) {
                         _mensagemStatus.value = "Estoque insuficiente para registrar perda!"
@@ -100,6 +104,7 @@ class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
                 val estoqueMin = estoqueMinStr.toIntOrNull() ?: 5
                 
                 val novoProduto = Produto(
+                    companyId = companyId,
                     nome = nome.trim(),
                     categoria = if (categoria.isBlank()) "Geral" else categoria.trim(),
                     precoVenda = preco,
@@ -132,7 +137,7 @@ class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
                     return@launch
                 }
 
-                val produto = produtoRepository.getProdutoById(produtoId)
+                val produto = produtoRepository.getProdutoById(produtoId, companyId)
                 if (produto != null) {
                     val produtoAtualizado = produto.copy(
                         nome = novoNome.trim(),
@@ -153,7 +158,7 @@ class EstoqueViewModel(private val produtoRepository: ProdutoRepository,
     fun excluirProduto(produtoId: Int, nomeProduto: String) {
         viewModelScope.launch {
             try {
-                produtoRepository.desativarProduto(produtoId)
+                produtoRepository.desativarProduto(produtoId, companyId)
                 _mensagemStatus.value = "Produto \'${nomeProduto}\' removido!"
                 _mensagemStatusColor.value = 0xFF4CAF50 // GREEN
             } catch (e: Exception) {

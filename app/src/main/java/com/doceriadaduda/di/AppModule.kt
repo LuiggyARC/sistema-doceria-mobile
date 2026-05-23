@@ -4,16 +4,13 @@ import android.content.Context
 import com.doceriadaduda.data.local.local.AppDatabase
 import com.doceriadaduda.data.remote.ApiService
 import com.doceriadaduda.data.payment.PaymentManager
+import com.doceriadaduda.data.local.SessionManager
 import com.doceriadaduda.data.repository.DespesaRepository
+import com.doceriadaduda.data.repository.EmpresaRepository
 import com.doceriadaduda.data.repository.FechamentoRepository
 import com.doceriadaduda.data.repository.ProdutoRepository
 import com.doceriadaduda.data.repository.VendaRepository
-import com.doceriadaduda.viewmodel.DashboardViewModel
-import com.doceriadaduda.viewmodel.DespesaViewModel
-import com.doceriadaduda.viewmodel.EstoqueViewModel
-import com.doceriadaduda.viewmodel.RelatoriosViewModel
-import com.doceriadaduda.viewmodel.SharedViewModel
-import com.doceriadaduda.viewmodel.VendaViewModel
+import com.doceriadaduda.viewmodel.*
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -33,11 +30,15 @@ object AppModule {
     private val vendaDao by lazy { database.vendaDao() }
     private val despesaDao by lazy { database.despesaDao() }
     private val fechamentoDao by lazy { database.fechamentoDao() }
+    private val empresaDao by lazy { database.empresaDao() }
+
+    val sessionManager: SessionManager by lazy { SessionManager(applicationContext) }
 
     val produtoRepository: ProdutoRepository by lazy { ProdutoRepository(produtoDao) }
     val vendaRepository: VendaRepository by lazy { VendaRepository(vendaDao) }
     val despesaRepository: DespesaRepository by lazy { DespesaRepository(despesaDao) }
     val fechamentoRepository: FechamentoRepository by lazy { FechamentoRepository(fechamentoDao) }
+    val empresaRepository: EmpresaRepository by lazy { EmpresaRepository(empresaDao) }
 
     val paymentManager: PaymentManager by lazy { PaymentManager() }
 
@@ -50,25 +51,29 @@ object AppModule {
 
     val apiService: ApiService by lazy { retrofit.create(ApiService::class.java) }
 
+    val authViewModel: AuthViewModel by lazy {
+        AuthViewModel(empresaRepository, sessionManager)
+    }
+
     val sharedViewModel: SharedViewModel by lazy { SharedViewModel() }
 
     val dashboardViewModel: DashboardViewModel by lazy {
-        DashboardViewModel(produtoRepository, vendaRepository, despesaRepository, fechamentoRepository)
+        DashboardViewModel(produtoRepository, vendaRepository, despesaRepository, fechamentoRepository, sessionManager)
     }
 
     val vendaViewModel: VendaViewModel by lazy {
-        VendaViewModel(produtoRepository, vendaRepository, apiService, sharedViewModel, paymentManager)
+        VendaViewModel(produtoRepository, vendaRepository, apiService, sessionManager, paymentManager)
     }
 
     val estoqueViewModel: EstoqueViewModel by lazy {
-        EstoqueViewModel(produtoRepository, sharedViewModel)
+        EstoqueViewModel(produtoRepository, sessionManager)
     }
 
     val despesaViewModel: DespesaViewModel by lazy {
-        DespesaViewModel(despesaRepository, sharedViewModel)
+        DespesaViewModel(despesaRepository, sessionManager, sharedViewModel)
     }
 
     val relatoriosViewModel: RelatoriosViewModel by lazy {
-        RelatoriosViewModel(vendaRepository, despesaRepository, fechamentoRepository, produtoRepository, sharedViewModel)
+        RelatoriosViewModel(vendaRepository, despesaRepository, fechamentoRepository, produtoRepository, sessionManager, sharedViewModel)
     }
 }

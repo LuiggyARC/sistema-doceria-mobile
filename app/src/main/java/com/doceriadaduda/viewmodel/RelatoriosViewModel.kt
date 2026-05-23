@@ -24,11 +24,16 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+import com.doceriadaduda.data.local.SessionManager
+
 class RelatoriosViewModel(private val vendaRepository: VendaRepository,
                           private val despesaRepository: DespesaRepository,
                           private val fechamentoRepository: FechamentoRepository,
                           private val produtoRepository: com.doceriadaduda.data.repository.ProdutoRepository,
+                          private val sessionManager: SessionManager,
                           private val sharedViewModel: SharedViewModel) : ViewModel() {
+
+    private val companyId get() = sessionManager.companyId
 
     private val _vendasHoje = MutableStateFlow(0.0)
     val vendasHoje: StateFlow<Double> = _vendasHoje.asStateFlow()
@@ -125,22 +130,22 @@ class RelatoriosViewModel(private val vendaRepository: VendaRepository,
             val previousMonth = firstDayOfSelectedMonth.minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"))
 
             val flowList = listOf(
-                vendaRepository.getVendasTotalHoje(today),
-                despesaRepository.getDespesasTotalHoje(today),
-                vendaRepository.getQtdVendasHoje(today),
-                vendaRepository.getTaxaCartaoHoje(today),
+                vendaRepository.getVendasTotalHoje(today, companyId),
+                despesaRepository.getDespesasTotalHoje(today, companyId),
+                vendaRepository.getQtdVendasHoje(today, companyId),
+                vendaRepository.getTaxaCartaoHoje(today, companyId),
                 getVendas7DiasFlow(),
-                vendaRepository.getVendasPorFormaPagamentoMes(month),
-                vendaRepository.getTopVendidosMes(month),
-                despesaRepository.getDespesasPorCategoriaMes(month),
-                vendaRepository.getFaturamentoQtdMes(month),
-                despesaRepository.getDespesasTotalMes(month),
-                vendaRepository.getTaxaCartaoMes(month),
-                vendaRepository.getFaturamentoQtdMesAnterior(previousMonth),
-                despesaRepository.getDespesasTotalMesAnterior(previousMonth),
-                fechamentoRepository.getFechamentosRecentes(),
-                vendaRepository.getVendasPorCategoriaMes(month),
-                produtoRepository.getProdutosAtivos()
+                vendaRepository.getVendasPorFormaPagamentoMes(month, companyId),
+                vendaRepository.getTopVendidosMes(month, companyId),
+                despesaRepository.getDespesasPorCategoriaMes(month, companyId),
+                vendaRepository.getFaturamentoQtdMes(month, companyId),
+                despesaRepository.getDespesasTotalMes(month, companyId),
+                vendaRepository.getTaxaCartaoMes(month, companyId),
+                vendaRepository.getFaturamentoQtdMesAnterior(previousMonth, companyId),
+                despesaRepository.getDespesasTotalMesAnterior(previousMonth, companyId),
+                fechamentoRepository.getFechamentosRecentes(companyId),
+                vendaRepository.getVendasPorCategoriaMes(month, companyId),
+                produtoRepository.getProdutosAtivos(companyId)
             )
 
             combine(flowList) { array ->
@@ -197,7 +202,7 @@ class RelatoriosViewModel(private val vendaRepository: VendaRepository,
         val flows = (0..6).map { i ->
             val date = LocalDate.now().minusDays(i.toLong())
             val dateStr = date.format(DateTimeFormatter.ISO_DATE)
-            vendaRepository.getVendasTotalHoje(dateStr).map { value ->
+            vendaRepository.getVendasTotalHoje(dateStr, companyId).map { value ->
                 val diaNome = diasSemana[(date.dayOfWeek.value % 7)]
                 val diaNum = date.format(DateTimeFormatter.ofPattern("dd/MM"))
                 Triple(diaNome, diaNum, value ?: 0.0)

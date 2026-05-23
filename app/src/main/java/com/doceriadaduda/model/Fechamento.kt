@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "fechamentos")
 data class Fechamento(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val companyId: Int = 1,
     val data: String, // Usar String para DATE ou converter para LocalDate
     val qtdVendas: Int,
     val faturamento: Double,

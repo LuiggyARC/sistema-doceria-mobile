@@ -19,12 +19,17 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
+import com.doceriadaduda.data.local.SessionManager
+
 class DashboardViewModel(
     private val produtoRepository: ProdutoRepository,
     private val vendaRepository: VendaRepository,
     private val despesaRepository: DespesaRepository,
-    private val fechamentoRepository: FechamentoRepository
+    private val fechamentoRepository: FechamentoRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
+
+    private val companyId get() = sessionManager.companyId
 
     private val _vendasHoje = MutableStateFlow(0.0)
     val vendasHoje: StateFlow<Double> = _vendasHoje
@@ -74,6 +79,7 @@ class DashboardViewModel(
             val now = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
             
             val fechamento = Fechamento(
+                companyId = companyId,
                 data = today,
                 qtdVendas = _qtdVendasHoje.value,
                 faturamento = _vendasHoje.value,
@@ -93,15 +99,15 @@ class DashboardViewModel(
             val month = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"))
 
             val flowList = listOf(
-                vendaRepository.getVendasTotalHoje(today),
-                vendaRepository.getVendasTotalMes(month),
-                produtoRepository.getEstoqueBaixoCount(),
-                despesaRepository.getDespesasTotalHoje(today),
-                vendaRepository.getQtdVendasHoje(today),
-                vendaRepository.getTaxaCartaoHoje(today),
-                vendaRepository.getTopVendidosDia(today),
-                flow { emit(fechamentoRepository.getFechamentoByData(today)) },
-                despesaRepository.getDespesasTotalMes(month)
+                vendaRepository.getVendasTotalHoje(today, companyId),
+                vendaRepository.getVendasTotalMes(month, companyId),
+                produtoRepository.getEstoqueBaixoCount(companyId),
+                despesaRepository.getDespesasTotalHoje(today, companyId),
+                vendaRepository.getQtdVendasHoje(today, companyId),
+                vendaRepository.getTaxaCartaoHoje(today, companyId),
+                vendaRepository.getTopVendidosDia(today, companyId),
+                flow { emit(fechamentoRepository.getFechamentoByData(today, companyId)) },
+                despesaRepository.getDespesasTotalMes(month, companyId)
             )
 
             combine(flowList) { array ->

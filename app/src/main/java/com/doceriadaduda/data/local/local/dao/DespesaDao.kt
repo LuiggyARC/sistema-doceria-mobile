@@ -11,23 +11,23 @@ interface DespesaDao {
     @Insert
     suspend fun insert(despesa: Despesa)
 
-    @Query("SELECT descricao, categoria, valor, data FROM despesas ORDER BY data DESC LIMIT 10")
-    fun getUltimasDespesas(): Flow<List<DespesaResumo>>
+    @Query("SELECT descricao, categoria, valor, data FROM despesas WHERE companyId = :companyId ORDER BY data DESC LIMIT 10")
+    fun getUltimasDespesas(companyId: Int): Flow<List<DespesaResumo>>
 
-    @Query("SELECT SUM(valor) FROM despesas WHERE data = :today")
-    fun getDespesasTotalHoje(today: String): Flow<Double?>
+    @Query("SELECT SUM(valor) FROM despesas WHERE companyId = :companyId AND data = :today")
+    fun getDespesasTotalHoje(today: String, companyId: Int): Flow<Double?>
 
-    @Query("SELECT SUM(valor) FROM despesas WHERE STRFTIME(\"%Y-%m\", data) = :month")
-    fun getDespesasTotalMes(month: String): Flow<Double?>
+    @Query("SELECT SUM(valor) FROM despesas WHERE companyId = :companyId AND STRFTIME(\"%Y-%m\", data) = :month")
+    fun getDespesasTotalMes(month: String, companyId: Int): Flow<Double?>
 
-    @Query("SELECT SUM(valor) FROM despesas WHERE data >= DATE(\'now\', \'-60 days\')")
-    fun getDespesasTotalUltimos60Dias(): Flow<Double?>
+    @Query("SELECT SUM(valor) FROM despesas WHERE companyId = :companyId AND data >= DATE(\'now\', \'-60 days\')")
+    fun getDespesasTotalUltimos60Dias(companyId: Int): Flow<Double?>
 
-    @Query("SELECT categoria, SUM(valor) as valor FROM despesas WHERE STRFTIME(\"%Y-%m\", data) = :month GROUP BY categoria ORDER BY valor DESC")
-    fun getDespesasPorCategoriaMes(month: String): Flow<List<DespesaPorCategoria>>
+    @Query("SELECT categoria, SUM(valor) as valor FROM despesas WHERE companyId = :companyId AND STRFTIME(\"%Y-%m\", data) = :month GROUP BY categoria ORDER BY valor DESC")
+    fun getDespesasPorCategoriaMes(month: String, companyId: Int): Flow<List<DespesaPorCategoria>>
 
-    @Query("SELECT SUM(valor) FROM despesas WHERE STRFTIME(\"%Y-%m\", data) = :previousMonth")
-    fun getDespesasTotalMesAnterior(previousMonth: String): Flow<Double?>
+    @Query("SELECT SUM(valor) FROM despesas WHERE companyId = :companyId AND STRFTIME(\"%Y-%m\", data) = :previousMonth")
+    fun getDespesasTotalMesAnterior(previousMonth: String, companyId: Int): Flow<Double?>
 }
 
 data class DespesaResumo(val descricao: String, val categoria: String?, val valor: Double, val data: String)

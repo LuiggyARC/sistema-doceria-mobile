@@ -9,14 +9,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProdutoDao {
-    @Query("SELECT * FROM produtos WHERE ativo = 1 ORDER BY nome ASC")
-    fun getProdutosAtivos(): Flow<List<Produto>>
+    @Query("SELECT * FROM produtos WHERE companyId = :companyId AND ativo = 1 ORDER BY nome ASC")
+    fun getProdutosAtivos(companyId: Int): Flow<List<Produto>>
 
-    @Query("SELECT * FROM produtos WHERE id = :produtoId")
-    suspend fun getProdutoById(produtoId: Int): Produto?
+    @Query("SELECT * FROM produtos WHERE id = :produtoId AND companyId = :companyId")
+    suspend fun getProdutoById(produtoId: Int, companyId: Int): Produto?
 
-    @Query("SELECT * FROM produtos WHERE nome = :nomeProduto AND ativo = 1")
-    suspend fun getProdutoByNome(nomeProduto: String): Produto?
+    @Query("SELECT * FROM produtos WHERE nome = :nomeProduto AND companyId = :companyId AND ativo = 1")
+    suspend fun getProdutoByNome(nomeProduto: String, companyId: Int): Produto?
 
     @Insert
     suspend fun insert(produto: Produto)
@@ -24,9 +24,9 @@ interface ProdutoDao {
     @Update
     suspend fun update(produto: Produto)
 
-    @Query("UPDATE produtos SET ativo = 0 WHERE id = :produtoId")
-    suspend fun desativarProduto(produtoId: Int)
+    @Query("UPDATE produtos SET ativo = 0 WHERE id = :produtoId AND companyId = :companyId")
+    suspend fun desativarProduto(produtoId: Int, companyId: Int)
 
-    @Query("SELECT COUNT(*) FROM produtos WHERE quantidadeEstoque <= estoqueMinimo AND ativo = 1")
-    fun getEstoqueBaixoCount(): Flow<Int>
+    @Query("SELECT COUNT(*) FROM produtos WHERE companyId = :companyId AND quantidadeEstoque <= estoqueMinimo AND ativo = 1")
+    fun getEstoqueBaixoCount(companyId: Int): Flow<Int>
 }

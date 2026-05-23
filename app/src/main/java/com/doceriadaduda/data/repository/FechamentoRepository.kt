@@ -9,7 +9,7 @@ class FechamentoRepository(private val fechamentoDao: FechamentoDao) {
 
     suspend fun insert(fechamento: Fechamento) = fechamentoDao.insert(fechamento)
 
-    suspend fun getFechamentoByData(dataStr: String): Fechamento? = fechamentoDao.getFechamentoByData(dataStr)
+    suspend fun getFechamentoByData(dataStr: String, companyId: Int): Fechamento? = fechamentoDao.getFechamentoByData(dataStr, companyId)
 
-    fun getFechamentosRecentes(): Flow<List<FechamentoResumo>> = fechamentoDao.getFechamentosRecentes()
+    fun getFechamentosRecentes(companyId: Int): Flow<List<FechamentoResumo>> = fechamentoDao.getFechamentosRecentes(companyId)
 }
