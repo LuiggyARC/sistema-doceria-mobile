@@ -8,6 +8,7 @@ import com.doceriadaduda.data.local.SessionManager
 import com.doceriadaduda.data.repository.DespesaRepository
 import com.doceriadaduda.data.repository.EmpresaRepository
 import com.doceriadaduda.data.repository.FechamentoRepository
+import com.doceriadaduda.data.repository.FuncionarioRepository
 import com.doceriadaduda.data.repository.ProdutoRepository
 import com.doceriadaduda.data.repository.VendaRepository
 import com.doceriadaduda.viewmodel.*
@@ -31,6 +32,7 @@ object AppModule {
     private val despesaDao by lazy { database.despesaDao() }
     private val fechamentoDao by lazy { database.fechamentoDao() }
     private val empresaDao by lazy { database.empresaDao() }
+    private val funcionarioDao by lazy { database.funcionarioDao() }
 
     val sessionManager: SessionManager by lazy { SessionManager(applicationContext) }
 
@@ -39,6 +41,7 @@ object AppModule {
     val despesaRepository: DespesaRepository by lazy { DespesaRepository(despesaDao) }
     val fechamentoRepository: FechamentoRepository by lazy { FechamentoRepository(fechamentoDao) }
     val empresaRepository: EmpresaRepository by lazy { EmpresaRepository(empresaDao) }
+    val funcionarioRepository: FuncionarioRepository by lazy { FuncionarioRepository(funcionarioDao) }
 
     val paymentManager: PaymentManager by lazy { PaymentManager() }
 
@@ -53,6 +56,14 @@ object AppModule {
 
     val authViewModel: AuthViewModel by lazy {
         AuthViewModel(empresaRepository, sessionManager)
+    }
+
+    val funcionarioViewModel: FuncionarioViewModel by lazy {
+        FuncionarioViewModel(funcionarioRepository, sessionManager)
+    }
+
+    val syncViewModel: SyncViewModel by lazy {
+        SyncViewModel(apiService, produtoRepository, vendaRepository, despesaRepository, sessionManager)
     }
 
     val sharedViewModel: SharedViewModel by lazy { SharedViewModel() }

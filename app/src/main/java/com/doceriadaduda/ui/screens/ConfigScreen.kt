@@ -33,12 +33,19 @@ import com.doceriadaduda.data.payment.PaymentProvider
 import com.doceriadaduda.di.AppModule
 import com.doceriadaduda.ui.theme.LocalDynamicThemeState
 
+import androidx.compose.material.icons.filled.CloudUpload
+import com.doceriadaduda.viewmodel.SyncViewModel
+
 @Composable
 fun ConfigScreen() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     val paymentManager = remember { AppModule.paymentManager }
+    val syncViewModel = remember { AppModule.syncViewModel }
     val dynamicThemeState = LocalDynamicThemeState.current
+    
+    val isSyncing by syncViewModel.isSyncing.collectAsState()
+    val syncMessage by syncViewModel.syncMessage.collectAsState()
     
     var mpPublicKey by remember { 
         mutableStateOf(prefs.getString("mp_public_key", "") ?: "") 
@@ -238,6 +245,52 @@ fun ConfigScreen() {
             }
         }
         
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Backup em Nuvem",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Sincronize seus dados com o servidor para evitar perdas.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Button(
+                    onClick = { syncViewModel.performBackup() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isSyncing,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                ) {
+                    if (isSyncing) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                    } else {
+                        Icon(Icons.Default.CloudUpload, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Realizar Backup Agora")
+                    }
+                }
+                
+                syncMessage?.let {
+                    Text(
+                        text = it,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 8.dp),
+                        color = if (it.contains("sucesso")) Color(0xFF4CAF50) else Color.Red
+                    )
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
         
         Button(

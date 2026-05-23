@@ -26,9 +26,11 @@ import kotlinx.coroutines.launch
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object Login : Screen("login", "Login", Icons.AutoMirrored.Filled.Login)
     object Dashboard : Screen("dashboard", "Dashboard", Icons.Default.Dashboard)
-    object Venda : Screen("venda", "Venda", Icons.Default.ShoppingCart)
+    object Venda : Screen("venda", "Nova Venda", Icons.Default.ShoppingCart)
+    object Historico : Screen("historico", "Histórico Vendas", Icons.Default.History)
     object Estoque : Screen("estoque", "Estoque", Icons.Default.Inventory)
     object Despesa : Screen("despesa", "Despesa", Icons.AutoMirrored.Filled.ReceiptLong)
+    object Funcionarios : Screen("funcionarios", "Funcionários", Icons.Default.People)
     object Relatorios : Screen("relatorios", "Relatorios", Icons.Default.BarChart)
     object Config : Screen("config", "Ajustes", Icons.Default.Settings)
     object Admin : Screen("admin", "Painel Admin", Icons.Default.AdminPanelSettings)
@@ -36,9 +38,11 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
 
 val items = listOf(
     Screen.Venda,
+    Screen.Historico,
     Screen.Dashboard,
     Screen.Estoque,
     Screen.Despesa,
+    Screen.Funcionarios,
     Screen.Relatorios,
     Screen.Config
 )
@@ -133,8 +137,10 @@ fun AppNavigation() {
                 ) {
                     composable(Screen.Dashboard.route) { DashboardScreen(companyName = dynamicThemeState.companyName) }
                     composable(Screen.Venda.route) { VendaScreen() }
+                    composable(Screen.Historico.route) { HistoricoVendasScreen() }
                     composable(Screen.Estoque.route) { EstoqueScreen() }
                     composable(Screen.Despesa.route) { DespesaScreen() }
+                    composable(Screen.Funcionarios.route) { FuncionarioScreen() }
                     composable(Screen.Relatorios.route) { RelatoriosScreen() }
                     composable(Screen.Config.route) { ConfigScreen() }
                     composable(Screen.Admin.route) { AdminScreen() }
