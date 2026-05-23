@@ -1,165 +1,501 @@
-# 🍰 App de Gestão para Doceria
+# ⚡ PaiDégua Hub
 
-Aplicativo mobile desenvolvido para controle completo de uma doceria, permitindo gerenciar **vendas, estoque, despesas e fechamento de caixa** em um único sistema simples e intuitivo.
+<div align="center">
 
----
+# 📱 MVP Android de Gestão Empresarial
 
-## 📱 Visão Geral
+Sistema Android desenvolvido para pequenos negócios com foco em:
 
-Este projeto foi desenvolvido com foco em **pequenos negócios**, oferecendo uma solução prática para o dia a dia de produção e vendas.
+**vendas • estoque • dashboards • relatórios • funcionários • pagamentos • gestão operacional**
 
-O sistema permite que o usuário registre suas operações em tempo real e acompanhe o desempenho do negócio através de um painel visual.
-
----
-
-## 🎯 Problema Resolvido
-
-Antes do sistema:
-
-* Controle manual (papel ou anotações)
-* Dificuldade para acompanhar vendas
-* Falta de visão clara do resultado diário
-* Erros no controle de estoque
-
-Com o app:
-
-* Centralização de todas as operações
-* Registro rápido de vendas e despesas
-* Controle automático de estoque
-* Visão clara do desempenho do negócio
+</div>
 
 ---
 
-## 🚀 Funcionalidades
+# 📖 Sobre o Projeto
 
-### 📊 Dashboard
+O **PaiDégua Hub** é um aplicativo Android criado para ajudar pequenos empreendedores a organizarem seus negócios de forma simples, moderna e acessível.
 
-* Visão geral do negócio
-* Faturamento do dia
-* Despesas do dia
-* Resultado do dia
-* Produtos mais vendidos (Top 5)
+O projeto começou como um aplicativo de gestão para docerias, mas evoluiu para um sistema empresarial mais robusto preparado para:
 
-📸
-![WhatsApp Image 2026-03-17 at 12 49 01](https://github.com/user-attachments/assets/744049a5-e2ab-443d-bb54-147b82d4b205)
-![WhatsApp Image 2026-03-17 at 12 49 02](https://github.com/user-attachments/assets/a55b2f1f-726f-46a4-9557-3a17fc36b586)
+- múltiplas empresas;
+- autenticação real;
+- dashboards financeiros;
+- controle operacional;
+- gerenciamento de funcionários;
+- histórico de vendas;
+- backup em nuvem;
+- integração com pagamentos;
+- futura sincronização online.
 
+A proposta principal do sistema é funcionar como:
 
----
-
-### 🛒 Registro de Vendas
-
-* Seleção de produto
-* Controle de quantidade
-* Baixa automática no estoque
-* Registro de forma de pagamento
-
-📸 
-![WhatsApp Image 2026-03-17 at 12 49 03](https://github.com/user-attachments/assets/4c084a3c-16ca-4907-bb1d-56dceae7116b)
-
+> “O gerente digital do pequeno empreendedor.”
 
 ---
 
-### 📦 Controle de Estoque
+# 🎯 Problema Resolvido
 
-* Cadastro de produtos
-* Reposição de estoque
-* Alerta de estoque baixo
-* Organização por categoria
+Muitos pequenos negócios:
 
-📸 
-![WhatsApp Image 2026-03-17 at 12 49 04](https://github.com/user-attachments/assets/b2f38c6e-c80b-4dee-8b4e-3ef3c2a160e5)
+- controlam vendas manualmente;
+- misturam dinheiro pessoal e empresarial;
+- não possuem visão do lucro real;
+- não conseguem acompanhar estoque;
+- não possuem relatórios financeiros;
+- não têm controle operacional;
+- dependem totalmente da memória do proprietário.
 
----
-
-### 💸 Registro de Despesas
-
-* Cadastro de despesas
-* Classificação por categoria
-* Controle diário de gastos
-
-📸 
-![WhatsApp Image 2026-03-17 at 12 49 06](https://github.com/user-attachments/assets/6c4f6d5a-7528-4829-8472-7d79f9eebffe)
+O PaiDégua Hub busca resolver esse cenário através de uma solução simples e visual.
 
 ---
 
-### 📈 Relatórios e Fechamento de Caixa
+# ✨ Diferenciais do Projeto
 
-* Resumo mensal
-* Fechamento de caixa diário
-* Histórico de fechamentos
-* Resultado do período
+## 🎨 Personalização Inteligente
 
-📸 
-![WhatsApp Image 2026-03-17 at 12 49 05](https://github.com/user-attachments/assets/1c3a1ca4-e7ce-4542-837f-6150a1e9dfdc)
+O sistema adapta automaticamente sua identidade visual com base na logo cadastrada pela empresa.
 
+Ao carregar a logo:
 
----
-
-## 🧠 Regras de Negócio
-
-* Baixa automática no estoque ao registrar venda
-* Controle de despesas separado por categoria
-* Cálculo de resultado baseado em faturamento - despesas
-* Fechamento de caixa único por dia
-* Histórico de vendas e operações armazenado localmente
+- as cores principais do sistema mudam automaticamente;
+- a interface se adapta à identidade visual da empresa;
+- o aplicativo se aproxima de soluções white-label modernas.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 📲 Interface Mobile Moderna
 
-* Python
-* Flet (Interface Mobile/Desktop)
-* SQLite (Banco de Dados Local)
+O aplicativo foi desenvolvido utilizando:
 
----
+- Kotlin;
+- Jetpack Compose;
+- Material Design 3;
+- arquitetura MVVM;
+- Navigation Compose.
 
-## 📦 Estrutura do Sistema
+Mudanças recentes:
 
-* Dashboard (visão geral)
-* Vendas (registro e controle)
-* Estoque (produtos e reposição)
-* Despesas (controle financeiro)
-* Relatórios (análise e fechamento)
-
----
-
-## 🔒 Disponibilidade do Código
-
-Este repositório tem como objetivo apresentar o projeto para fins de portfólio.
-
-> O código-fonte completo e o APK não estão disponíveis publicamente, pois fazem parte de uma base reutilizável para atendimento a clientes.
+- navegação lateral moderna;
+- integração total entre módulos;
+- foco em experiência mobile;
+- fluxo mais rápido para operação diária.
 
 ---
 
-## 💼 Aplicação Comercial
+# 🔐 Autenticação e Registro
 
-Este sistema foi desenvolvido para uso real e pode ser adaptado para:
+O sistema agora possui autenticação real.
 
-* Docerias
-* Confeitarias
-* Pequenos comércios
-* Negócios locais
+## Recursos implementados
 
----
+- login com e-mail e senha;
+- cadastro de novas empresas;
+- validação de credenciais;
+- gerenciamento de sessão;
+- persistência de login;
+- estrutura preparada para sincronização futura em nuvem.
 
-## 🚀 Próximas Melhorias
-
-* Backup e restauração de dados
-* Exportação de relatórios (CSV/PDF)
-* Personalização por cliente (nome, cores, logo)
-* Análise por período personalizado
-* Dashboard com formas de pagamento
+O usuário pode criar sua empresa diretamente pelo aplicativo.
 
 ---
 
-## 👨‍💻 Autor
+# 🏢 Suporte Multiempresa Real
 
-Desenvolvido por **Luiggy**
-📊 Focado em soluções para pequenos negócios e análise de dados
+Todas as funcionalidades agora operam utilizando:
+
+- `companyId`
+
+Isso garante isolamento total entre empresas.
+
+## Recursos afetados
+
+- estoque;
+- vendas;
+- funcionários;
+- despesas;
+- fechamentos;
+- relatórios.
+
+Na prática:
+
+- uma empresa não visualiza os dados da outra;
+- cada login possui ambiente isolado;
+- produtos, vendas e funcionários são independentes.
 
 ---
 
-## ⭐ Observação
+## 🔄 Filtragem Automática
 
-Este projeto representa uma solução prática e funcional para gestão de pequenos negócios, com foco em simplicidade, eficiência e usabilidade.
+Todos os ViewModels realizam filtragem automática utilizando a empresa logada.
+
+Isso transforma o sistema em uma estrutura próxima de plataformas SaaS multiempresa.
+
+---
+
+## 🔐 SessionManager
+
+Foi criado um gerenciador de sessão responsável por:
+
+- manter login ativo;
+- controlar usuário autenticado;
+- persistir sessão localmente;
+- preparar futura sincronização online.
+
+---
+
+# 🛒 Gestão de Vendas
+
+- registro rápido de vendas;
+- formas de pagamento;
+- baixa automática no estoque;
+- histórico operacional;
+- fluxo preparado para integração de pagamentos.
+
+---
+
+# 📜 Histórico de Vendas
+
+Foi adicionada uma nova tela:
+
+## Histórico Vendas
+
+Recursos:
+
+- visualização de vendas anteriores;
+- histórico operacional completo;
+- consulta de movimentações;
+- acompanhamento financeiro;
+- análise de operações passadas.
+
+A nova tela está integrada ao menu lateral.
+
+---
+
+# 👨‍💼 Gestão de Funcionários
+
+Foi adicionada uma nova área:
+
+## Funcionários
+
+Preparada para:
+
+- cadastro de funcionários;
+- gerenciamento operacional;
+- organização da equipe;
+- expansão futura de permissões e acessos.
+
+A funcionalidade já está integrada ao Drawer/Menu lateral.
+
+---
+
+# 📊 Dashboard Inteligente
+
+O dashboard centraliza os principais indicadores do negócio:
+
+- faturamento;
+- lucro;
+- vendas do dia;
+- estoque baixo;
+- metas;
+- status do caixa;
+- resumo operacional.
+
+---
+
+# 📦 Controle de Estoque
+
+- cadastro de produtos;
+- controle de estoque mínimo;
+- atualização automática;
+- alertas de estoque baixo;
+- organização operacional.
+
+---
+
+# 💸 Controle Financeiro
+
+## Despesas
+
+- registro de despesas;
+- categorias financeiras;
+- histórico operacional;
+- controle diário.
+
+## Relatórios
+
+- relatórios mensais;
+- histórico financeiro;
+- exportação PDF;
+- resumo diário;
+- taxas de cartão;
+- resultado financeiro.
+
+---
+
+# ☁️ Backup em Nuvem
+
+Foi adicionada uma nova seção:
+
+## Backup em Nuvem
+
+Localizada em:
+
+1. Menu lateral
+2. Ajustes
+3. Backup em Nuvem
+
+Objetivos:
+
+- preparar sincronização online;
+- segurança de dados;
+- recuperação futura de informações;
+- estrutura para ambiente SaaS.
+
+---
+
+# 💳 Integração de Pagamentos
+
+Estrutura preparada para:
+
+- Mercado Pago;
+- Stone;
+- Caixa;
+- conexão Bluetooth;
+- configuração de Public Key;
+- fluxo de integração futura.
+
+---
+
+# 👨‍💼 Painel Administrativo
+
+Foi adicionada uma nova tela administrativa.
+
+## Painel Admin
+
+Recursos:
+
+- visualizar empresas cadastradas;
+- ativar/desativar empresas;
+- gerenciamento operacional;
+- controle administrativo.
+
+Acesso restrito para administradores.
+
+---
+
+# 🛡️ Segurança e Estrutura
+
+## 🔒 Banco de Dados
+
+O banco foi atualizado para:
+
+- versão `v5`
+
+Permitindo:
+
+- suporte multiempresa;
+- novas tabelas;
+- estrutura escalável;
+- futuras sincronizações.
+
+---
+
+## 🔐 Proteção de Código
+
+Foi ativado:
+
+- ProGuard;
+- R8;
+- regras de ofuscação.
+
+Objetivos:
+
+- dificultar engenharia reversa;
+- proteger lógica de negócio;
+- preparar publicação comercial.
+
+---
+
+## 🚀 Build de Release
+
+O projeto agora possui:
+
+- `minifyEnabled`;
+- `shrinkResources`;
+- otimizações de release.
+
+Preparando o aplicativo para:
+
+- deploy;
+- publicação;
+- distribuição comercial.
+
+---
+
+# 📲 Navegação do Aplicativo
+
+## Como acessar as novas funcionalidades
+
+1. Abra o Menu Lateral (Drawer) no canto esquerdo.
+2. Acesse:
+   - Histórico Vendas
+   - Funcionários
+3. Vá em:
+   - Ajustes
+   - Backup em Nuvem
+
+Todas as funcionalidades já estão integradas à navegação lateral.
+
+---
+
+# 🧠 Regras de Negócio
+
+- vendas reduzem estoque automaticamente;
+- dados são isolados por empresa;
+- sessões permanecem persistidas;
+- despesas são categorizadas;
+- relatórios financeiros são consolidados;
+- histórico operacional é salvo localmente.
+
+---
+
+# 🛠️ Tecnologias Utilizadas
+
+## 📱 Mobile
+
+- Kotlin
+- Android Studio
+- Jetpack Compose
+- Material Design 3
+
+## 🗄️ Banco de Dados
+
+- Room Database
+- SQLite
+- Migrações Room
+
+## 🌐 Integração
+
+- Retrofit
+- OkHttp
+- Bluetooth Android
+
+## 🏗️ Arquitetura
+
+- MVVM
+- ViewModels
+- Repositories
+- Navigation Compose
+- SessionManager
+
+## 🔒 Segurança
+
+- ProGuard
+- R8
+- Release Optimization
+
+---
+
+# 📦 Estrutura Geral
+
+```text
+PaiDégua Hub
+├── Login e Registro
+├── Multiempresa
+├── Dashboard
+├── Histórico de Vendas
+├── Funcionários
+├── Vendas
+├── Estoque
+├── Despesas
+├── Relatórios
+├── Backup em Nuvem
+├── Painel Admin
+├── Configurações
+├── SessionManager
+├── Room Database
+└── Integração de Pagamentos
+```
+
+---
+
+# 🚀 Roadmap
+
+## Próximas Melhorias
+
+- sincronização online;
+- autenticação em nuvem;
+- multiusuário avançado;
+- controle de permissões;
+- analytics avançado;
+- painel web administrativo;
+- versão SaaS comercial.
+
+---
+
+# 💼 Aplicação Comercial
+
+O sistema pode ser utilizado em:
+
+- docerias;
+- cafeterias;
+- lanchonetes;
+- pequenos mercados;
+- lojas locais;
+- negócios familiares;
+- pequenos comércios.
+
+---
+
+# 🔒 Disponibilidade do Código
+
+Este repositório possui foco educacional e de portfólio.
+
+O projeto demonstra:
+
+- arquitetura Android moderna;
+- autenticação real;
+- multiempresa;
+- dashboards;
+- relatórios;
+- integração de pagamentos;
+- segurança;
+- preparação para deploy comercial.
+
+---
+
+# 👨‍💻 Autor
+
+Desenvolvido por **Luiggy Alberto**
+
+Foco em:
+
+- Android;
+- automação;
+- análise de dados;
+- sistemas comerciais;
+- soluções para pequenos negócios.
+
+GitHub:
+
+https://github.com/LuiggyARC
+
+---
+
+# ⭐ Considerações Finais
+
+O PaiDégua Hub evoluiu de um simples aplicativo de controle para um MVP Android empresarial com:
+
+- autenticação real;
+- suporte multiempresa;
+- dashboards;
+- relatórios;
+- gestão de funcionários;
+- histórico operacional;
+- segurança;
+- integração de pagamentos;
+- preparação SaaS;
+- arquitetura moderna.
+
+O projeto hoje já demonstra características reais de um produto comercial em evolução.
