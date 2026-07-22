@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+import com.doceriadaduda.util.SecurityUtils
+
 class AuthViewModel(
     private val empresaRepository: EmpresaRepository,
     private val sessionManager: SessionManager
@@ -26,7 +28,7 @@ class AuthViewModel(
             _error.value = null
             try {
                 val empresa = empresaRepository.getByEmail(email)
-                if (empresa != null && empresa.senhaHash == senha) { // Simples para exemplo, usar hash real
+                if (empresa != null && SecurityUtils.checkPassword(senha, empresa.senhaHash)) {
                     sessionManager.companyId = empresa.id
                     sessionManager.companyName = empresa.nome
                     sessionManager.isAdmin = empresa.isAdmin
@@ -55,7 +57,7 @@ class AuthViewModel(
                 val novaEmpresa = Empresa(
                     nome = nome,
                     email = email,
-                    senhaHash = senha, // Simples para exemplo
+                    senhaHash = SecurityUtils.hashPassword(senha),
                     isAdmin = false
                 )
                 val id = empresaRepository.insert(novaEmpresa)

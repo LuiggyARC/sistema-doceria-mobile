@@ -36,9 +36,12 @@ import com.doceriadaduda.ui.theme.LocalDynamicThemeState
 import androidx.compose.material.icons.filled.CloudUpload
 import com.doceriadaduda.viewmodel.SyncViewModel
 
+import com.doceriadaduda.util.SecurityUtils
+
 @Composable
 fun ConfigScreen() {
     val context = LocalContext.current
+    val securePrefs = remember { SecurityUtils.getEncryptedPrefs(context) }
     val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     val paymentManager = remember { AppModule.paymentManager }
     val syncViewModel = remember { AppModule.syncViewModel }
@@ -49,7 +52,7 @@ fun ConfigScreen() {
     val syncMessage by syncViewModel.syncMessage.collectAsState()
     
     var mpPublicKey by remember { 
-        mutableStateOf(prefs.getString("mp_public_key", "") ?: "") 
+        mutableStateOf(securePrefs.getString("mp_public_key", "") ?: "")
     }
     
     var statusMessage by remember { mutableStateOf("") }
@@ -296,8 +299,8 @@ fun ConfigScreen() {
         
         Button(
             onClick = {
+                securePrefs.edit().putString("mp_public_key", mpPublicKey).apply()
                 prefs.edit()
-                    .putString("mp_public_key", mpPublicKey)
                     .putString("preferred_payment_provider", selectedProvider.name)
                     .apply()
                 statusMessage = "Configurações salvas!"

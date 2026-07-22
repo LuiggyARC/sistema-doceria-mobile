@@ -114,4 +114,8 @@ dependencies {
     // Mercado Pago Point SDK
     implementation platform("com.mercadopago.android.sdk:sdk-android-bom:0.1.3")
     implementation "com.mercadopago.android.sdk:core-methods"
+
+    // Security & Encryption
+    implementation "androidx.security:security-crypto:1.1.0-alpha06"
+    implementation "org.mindrot:jbcrypt:0.4"
 }

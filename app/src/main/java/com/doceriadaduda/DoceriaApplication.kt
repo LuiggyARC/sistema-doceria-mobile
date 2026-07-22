@@ -4,14 +4,16 @@ import android.app.Application
 import android.content.Context
 import com.doceriadaduda.di.AppModule
 
+import com.doceriadaduda.util.SecurityUtils
+
 class DoceriaApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         AppModule.init(this)
         
-        // Tenta carregar a chave salva para inicializar o SDK
-        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val publicKey = prefs.getString("mp_public_key", null)
+        // Tenta carregar a chave salva de forma segura
+        val securePrefs = SecurityUtils.getEncryptedPrefs(this)
+        val publicKey = securePrefs.getString("mp_public_key", null)
         
         if (!publicKey.isNullOrBlank()) {
             try {
