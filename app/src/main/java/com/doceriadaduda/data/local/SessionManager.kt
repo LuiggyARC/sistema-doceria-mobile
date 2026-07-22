@@ -19,7 +19,11 @@ class SessionManager(context: Context) {
         set(value) = prefs.edit().putBoolean("is_admin", value).apply()
 
     fun logout() {
-        prefs.edit().clear().apply()
+        prefs.edit()
+            .remove("current_company_id")
+            .remove("current_company_name")
+            .remove("is_admin")
+            .apply()
     }
 
     fun isLoggedIn(): Boolean = companyId != -1

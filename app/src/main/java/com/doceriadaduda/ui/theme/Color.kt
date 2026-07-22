@@ -2,11 +2,11 @@ package com.doceriadaduda.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Primary = Color(0xFFE6A8A8)
-val Secondary = Color(0xFFC5A059)
-val Background = Color(0xFFF5F5F5)
-val TextColor = Color(0xFF5D4037)
-val CardBackground = Color(0xFFF7E1E1)
+val Primary = Color(0xFF004D26) // Verde do Logo
+val Secondary = Color(0xFFFFCC00) // Dourado do Logo
+val Background = Color(0xFFF8F8F8)
+val TextColor = Color(0xFF1B1B1B)
+val CardBackground = Color(0xFFFFFFFF)
 val Green = Color(0xFF4CAF50)
 val Red = Color(0xFFE53935)
 val Orange = Color(0xFFFF9800)

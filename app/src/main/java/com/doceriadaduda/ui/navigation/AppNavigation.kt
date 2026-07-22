@@ -60,7 +60,7 @@ fun AppNavigation() {
 
     // Observa mudanças no estado global da empresa para atualizar o login
     LaunchedEffect(dynamicThemeState.companyName) {
-        isLoggedIn = sessionManager.isLoggedIn()
+        isLoggedIn = sessionManager.isLoggedIn() && dynamicThemeState.companyName.isNotBlank()
     }
 
     if (!isLoggedIn) {
@@ -77,13 +77,20 @@ fun AppNavigation() {
             drawerContent = {
                 ModalDrawerSheet {
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = dynamicThemeState.companyName,
-                        modifier = Modifier.padding(16.dp),
-                        fontSize = 20.sp,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = dynamicThemeState.companyName,
+                            fontSize = 22.sp,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Plataforma Pai D’égua HUB",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                        )
+                    }
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
                     

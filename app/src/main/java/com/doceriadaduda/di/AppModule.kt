@@ -47,7 +47,7 @@ object AppModule {
 
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl("http://127.0.0.1:8010/") // Base URL da sua API Django
+            .baseUrl("http://10.0.2.2:8010/") // 10.0.2.2 é o endereço do PC no emulador Android
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

@@ -42,6 +42,7 @@ fun ConfigScreen() {
     val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     val paymentManager = remember { AppModule.paymentManager }
     val syncViewModel = remember { AppModule.syncViewModel }
+    val sessionManager = remember { AppModule.sessionManager }
     val dynamicThemeState = LocalDynamicThemeState.current
     
     val isSyncing by syncViewModel.isSyncing.collectAsState()
@@ -315,10 +316,10 @@ fun ConfigScreen() {
 
         Button(
             onClick = {
-                // Limpa as preferências de login
-                prefs.edit().remove("company_name").apply()
-                // Atualiza o estado global para deslogar
-                dynamicThemeState.companyName = "Pai D’égua Hub"
+                // Notifica o estado global para disparar a navegação
+                dynamicThemeState.companyName = ""
+                // Limpa a sessão oficial sem apagar o banco de dados/preferências de rede
+                sessionManager.logout()
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),

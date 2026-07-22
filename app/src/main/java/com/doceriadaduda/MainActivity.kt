@@ -45,6 +45,8 @@ class MainActivity : ComponentActivity() {
                 }
                 if (savedName != null) {
                     dynamicThemeState.companyName = savedName
+                } else {
+                    dynamicThemeState.companyName = "Pai D’égua Hub"
                 }
             }
 

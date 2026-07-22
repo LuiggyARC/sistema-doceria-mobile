@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.palette.graphics.Palette
 import com.doceriadaduda.ui.theme.LocalDynamicThemeState
@@ -41,12 +42,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.doceriadaduda.di.AppModule
 import com.doceriadaduda.viewmodel.AuthViewModel
 
+import androidx.compose.ui.res.painterResource
+import com.doceriadaduda.R
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     authViewModel: AuthViewModel = AppModule.authViewModel,
     onLoginSuccess: (String) -> Unit
 ) {
+    // ... logic remains same
     var isRegistering by remember { mutableStateOf(false) }
     var companyNameInput by remember { mutableStateOf("") }
     var emailInput by remember { mutableStateOf("") }
@@ -123,13 +128,19 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = if (isRegistering) "Criar Conta" else "Bem-vindo",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary
+            Image(
+                painter = painterResource(id = R.drawable.logo_hub),
+                contentDescription = "Logo Pai D'égua HUB",
+                modifier = Modifier.size(150.dp).padding(bottom = 16.dp),
+                contentScale = ContentScale.Fit
             )
-            
-            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "Soluções Inteligentes para seu Negócio",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
 
             if (isRegistering) {
                 Box(
