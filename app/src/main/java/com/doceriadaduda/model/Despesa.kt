@@ -11,5 +11,6 @@ data class Despesa(
     val categoria: String?,
     val tipo: String?,
     val valor: Double,
-    val data: String // Usar String para DATE ou converter para LocalDate
+    val data: String, // Usar String para DATE ou converter para LocalDate
+    val sincronizado: Boolean = false
 )

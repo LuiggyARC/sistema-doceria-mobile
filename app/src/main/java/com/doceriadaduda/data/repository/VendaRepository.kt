@@ -43,4 +43,8 @@ class VendaRepository(private val vendaDao: VendaDao) {
     fun getLucroEstimadoMes(month: String, companyId: Int): Flow<Double?> = vendaDao.getLucroEstimadoMes(month, companyId)
 
     fun getLucroEstimadoHoje(today: String, companyId: Int): Flow<Double?> = vendaDao.getLucroEstimadoHoje(today, companyId)
+
+    suspend fun getVendasNaoSincronizadas(companyId: Int) = vendaDao.getVendasNaoSincronizadas(companyId)
+
+    suspend fun marcarComoSincronizado(ids: List<Int>) = vendaDao.marcarComoSincronizado(ids)
 }

@@ -28,6 +28,12 @@ interface DespesaDao {
 
     @Query("SELECT SUM(valor) FROM despesas WHERE companyId = :companyId AND STRFTIME(\"%Y-%m\", data) = :previousMonth")
     fun getDespesasTotalMesAnterior(previousMonth: String, companyId: Int): Flow<Double?>
+
+    @Query("SELECT * FROM despesas WHERE companyId = :companyId AND sincronizado = 0")
+    suspend fun getDespesasNaoSincronizadas(companyId: Int): List<Despesa>
+
+    @Query("UPDATE despesas SET sincronizado = 1 WHERE id IN (:ids)")
+    suspend fun marcarComoSincronizado(ids: List<Int>)
 }
 
 data class DespesaResumo(val descricao: String, val categoria: String?, val valor: Double, val data: String)

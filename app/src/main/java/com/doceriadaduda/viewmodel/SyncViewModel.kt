@@ -33,16 +33,23 @@ class SyncViewModel(
             try {
                 val companyId = sessionManager.companyId
                 
-                // Backup Produtos
+                // 1. Backup Produtos (Sincronização Total)
                 val produtos = produtoRepository.getProdutosAtivos(companyId).first()
                 apiService.backupProdutos(produtos)
                 
-                // Backup Vendas (Simulando histórico completo)
-                val vendas = vendaRepository.getVendasHoje("", companyId).first() // Usar método real de histórico depois
-                apiService.backupVendas(vendas)
+                // 2. Backup Vendas (Sincronização Delta)
+                val vendasPendente = vendaRepository.getVendasNaoSincronizadas(companyId)
+                if (vendasPendente.isNotEmpty()) {
+                    apiService.backupVendas(vendasPendente)
+                    vendaRepository.marcarComoSincronizado(vendasPendente.map { it.id })
+                }
                 
-                // Backup Despesas
-                // ... logic
+                // 3. Backup Despesas (Sincronização Delta)
+                val despesasPendente = despesaRepository.getDespesasNaoSincronizadas(companyId)
+                if (despesasPendente.isNotEmpty()) {
+                    apiService.backupDespesas(despesasPendente)
+                    despesaRepository.marcarComoSincronizado(despesasPendente.map { it.id })
+                }
                 
                 _syncMessage.value = "Backup concluído com sucesso!"
             } catch (e: Exception) {

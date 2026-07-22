@@ -55,6 +55,12 @@ interface VendaDao {
 
     @Query("SELECT SUM(v.valorTotal - (p.precoCusto * v.quantidade)) FROM vendas v JOIN produtos p ON v.produtoId = p.id WHERE v.companyId = :companyId AND DATE(v.dataVenda) = :today")
     fun getLucroEstimadoHoje(today: String, companyId: Int): Flow<Double?>
+
+    @Query("SELECT * FROM vendas WHERE companyId = :companyId AND sincronizado = 0")
+    suspend fun getVendasNaoSincronizadas(companyId: Int): List<Venda>
+
+    @Query("UPDATE vendas SET sincronizado = 1 WHERE id IN (:ids)")
+    suspend fun marcarComoSincronizado(ids: List<Int>)
 }
 
 data class TopVendidoDia(val nome: String, val total: Int)

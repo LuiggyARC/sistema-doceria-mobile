@@ -19,7 +19,7 @@ import com.doceriadaduda.model.Funcionario
 import com.doceriadaduda.model.Produto
 import com.doceriadaduda.model.Venda
 
-@Database(entities = [Produto::class, Venda::class, Despesa::class, Fechamento::class, Empresa::class, Funcionario::class], version = 5, exportSchema = false)
+@Database(entities = [Produto::class, Venda::class, Despesa::class, Fechamento::class, Empresa::class, Funcionario::class], version = 6, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun produtoDao(): ProdutoDao
     abstract fun vendaDao(): VendaDao
@@ -37,9 +37,9 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "doceria_v5.db"
+                    "doceria_v6.db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .build()
                 INSTANCE = instance
                 instance
@@ -94,6 +94,13 @@ abstract class AppDatabase : RoomDatabase() {
                         ativo INTEGER NOT NULL DEFAULT 1
                     )
                 """.trimIndent())
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE vendas ADD COLUMN sincronizado INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE despesas ADD COLUMN sincronizado INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

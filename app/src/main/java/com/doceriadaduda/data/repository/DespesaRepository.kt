@@ -21,4 +21,8 @@ class DespesaRepository(private val despesaDao: DespesaDao) {
     fun getDespesasPorCategoriaMes(month: String, companyId: Int): Flow<List<DespesaPorCategoria>> = despesaDao.getDespesasPorCategoriaMes(month, companyId)
 
     fun getDespesasTotalMesAnterior(previousMonth: String, companyId: Int): Flow<Double?> = despesaDao.getDespesasTotalMesAnterior(previousMonth, companyId)
+
+    suspend fun getDespesasNaoSincronizadas(companyId: Int) = despesaDao.getDespesasNaoSincronizadas(companyId)
+
+    suspend fun marcarComoSincronizado(ids: List<Int>) = despesaDao.marcarComoSincronizado(ids)
 }

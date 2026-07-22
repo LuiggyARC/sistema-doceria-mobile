@@ -14,5 +14,6 @@ data class Venda(
     val formaPagamento: String?,
     val taxaCartao: Double,
     val valorLiquido: Double,
-    val dataVenda: String // Usar String para TIMESTAMP ou converter para LocalDateTime
+    val dataVenda: String, // Usar String para TIMESTAMP ou converter para LocalDateTime
+    val sincronizado: Boolean = false
 )

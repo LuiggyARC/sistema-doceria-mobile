@@ -11,9 +11,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -146,7 +144,16 @@ fun VendaScreen(vendaViewModel: VendaViewModel = AppModule.vendaViewModel,
                             Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
                             Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                                 Text(prodNome, fontWeight = FontWeight.Bold, color = TextColor)
-                                Text("x${venda.quantidade} | ${venda.formaPagamento}", fontSize = 12.sp, color = TextColor.copy(alpha = 0.7f))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("x${venda.quantidade} | ${venda.formaPagamento}", fontSize = 11.sp, color = TextColor.copy(alpha = 0.7f))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Icon(
+                                        imageVector = if (venda.sincronizado) Icons.Default.CloudDone else Icons.Default.CloudOff,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(12.dp),
+                                        tint = if (venda.sincronizado) Color(0xFF4CAF50) else Color.Gray
+                                    )
+                                }
                             }
                             Text(sharedViewModel.fmtReal(venda.valorTotal), fontWeight = FontWeight.Black, color = Color(0xFF4CAF50))
                         }
