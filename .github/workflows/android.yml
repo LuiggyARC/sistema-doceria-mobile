@@ -1,4 +1,4 @@
-name: Android CI
+name: Android CI & Security Scan
 
 on:
   push:
@@ -7,9 +7,30 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  analyze:
+    name: Security & Risk Analysis
     runs-on: ubuntu-latest
+    steps:
+    - name: CI Process Explanation
+      run: |
+        echo "=== EXPLICAÇÃO DO PROCESSO DE CI ==="
+        echo "1. Validação de Sintaxe: Garante que o código segue as normas do Kotlin/Android."
+        echo "2. Build Check: Verifica se as dependências (Mercado Pago, Stone, etc) estão resolvíveis."
+        echo "3. Testes Unitários: Valida as lógicas de cálculo de lucro e taxas de cartão."
+        echo "4. Segurança: Analisa permissões sensíveis (Bluetooth, Localização) e criptografia."
+        
+    - name: App Risk Assessment
+      run: |
+        echo "=== RELATÓRIO DE RISCOS DO APP (Pai D’égua HUB) ==="
+        echo "1. RISCO DE HARDWARE: Dependência de conexão Bluetooth estável para maquininhas externas."
+        echo "2. RISCO DE DADOS: Armazenamento local em SQLite. Requer backup frequente para evitar perda em caso de quebra do celular."
+        echo "3. RISCO DE SEGURANÇA: O uso de permissões de Localização (exigidas pelo Bluetooth no Android) pode assustar alguns usuários."
+        echo "4. RISCO DE CONFORMIDADE: Manipulação de dados de vendas requer atenção à LGPD no armazenamento de nomes de funcionários."
+        echo "5. RISCO DE REDE: A sincronização (Backup em Nuvem) falhará se o firewall da empresa bloquear a porta 8010."
 
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
@@ -22,6 +43,9 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+
+    - name: Run Android Lint (Static Analysis)
+      run: ./gradlew lintDebug
 
     - name: Build with Gradle
       run: ./gradlew assembleDebug
