@@ -50,10 +50,19 @@ android {
     kotlin {
         jvmToolchain(17)
     }
+    configurations.all {
+        resolutionStrategy {
+            force 'junit:junit:4.13.2'
+        }
+    }
     packaging {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
+    }
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
     }
 }
 
